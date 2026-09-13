@@ -223,6 +223,13 @@ def append_csv(path: str, rows: list[dict], fields: list[str]) -> None:
             w.writerow({k: r.get(k, "") for k in fields})
 
 
+def upsert_csv(path: str, row: dict, fields: list[str], key: str = "date") -> None:
+    """Append, but replace an existing row with the same key (same-day reruns)."""
+    rows = [r for r in read_csv(path) if r.get(key) != row.get(key)]
+    rows.append(row)
+    write_csv(path, rows, fields)
+
+
 def price_changed(prev: dict, cur: dict) -> bool:
     """A change in any price-relevant field, ignoring fields the previous state did not know."""
     for f in PRICE_FIELDS:
@@ -315,7 +322,7 @@ def run(data_dir: str, public_dir: str, date: str, dry_run: bool) -> int:
     write_csv(latest_path, state, STATE_FIELDS)
     append_csv(os.path.join(data_dir, "prices", "changes", f"{date[:7]}.csv"), changes, CHANGE_FIELDS)
     write_csv(os.path.join(public_dir, "catalogue", "products.csv"), state, MASTER_FIELDS)
-    append_csv(os.path.join(public_dir, "summary", "daily.csv"), [summary], list(summary.keys()))
+    upsert_csv(os.path.join(public_dir, "summary", "daily.csv"), summary, list(summary.keys()))
     return 0
 
 
