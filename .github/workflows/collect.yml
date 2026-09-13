@@ -41,6 +41,9 @@ jobs:
       - name: Collect
         run: python collector/collect.py --data-dir data-private --public-dir data
 
+      - name: Extract basket price panel (public)
+        run: python index/basket_series.py --data-dir data-private --public-dir data
+
       - name: Commit private change-log
         working-directory: data-private
         run: |

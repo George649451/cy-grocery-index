@@ -18,7 +18,7 @@ brands, stocked at all three branches on 13 September 2026, unit-priced by
 weight or volume wherever the category allows. Seasonal produce (grapes,
 melon) was excluded in favour of year-round lines.
 
-Weekly cost at 13 September 2026 prices: **€207.50** (promotional prices).
+Weekly cost at 13 September 2026 prices: **€208.79** (promotional prices).
 
 Churn: a delisted line is imputed from its group's average movement and
 replaced at the next re-base. Nothing enters or leaves mid-year.

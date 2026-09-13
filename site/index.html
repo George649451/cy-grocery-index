@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cyprus Grocery Price Index</title>
+<meta name="description" content="An independent, daily-collected measure of grocery price inflation in Cyprus, built from Alphamega's online catalogue and comparable to the official CPI.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="masthead">
+  <div class="wrap">
+    <p class="kicker">Independent · collected daily · published monthly</p>
+    <h1>Cyprus Grocery Price Index</h1>
+    <p class="lede">What a real weekly shop costs in Cyprus, measured properly: unit prices, a fixed basket, and a method that matches the official statistics closely enough to be compared with them.</p>
+    <p class="status" id="status">Loading…</p>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="hero" aria-labelledby="basket-h">
+    <div class="hero-figure">
+      <p class="label">The real basket · one week</p>
+      <p class="hero-number" id="hero-cost">—</p>
+      <p class="hero-sub" id="hero-sub">—</p>
+    </div>
+    <div class="hero-side">
+      <div class="tile"><p class="label">Monthly reading</p><p class="value" id="tile-month">—</p><p class="sub" id="tile-month-sub">—</p></div>
+      <div class="tile"><p class="label">Basket lines on promotion</p><p class="value" id="tile-promo">—</p><p class="sub" id="tile-promo-sub">—</p></div>
+      <div class="tile"><p class="label">Catalogue on promotion</p><p class="value" id="tile-cat-promo">—</p><p class="sub" id="tile-cat-promo-sub">—</p></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="chart-h">
+    <h2 id="chart-h">Weekly cost of the basket</h2>
+    <p class="muted">Daily observations at paid (promotional) prices. Inflation figures are published as monthly averages; the daily line is the raw data behind them.</p>
+    <figure class="chart" id="chart"></figure>
+    <div class="table-scroll">
+      <table id="monthly-table" class="compact">
+        <caption>Monthly readings</caption>
+        <thead><tr><th>Month</th><th class="num">Average weekly cost</th><th class="num">Index (Sep 2026 = 100)</th><th class="num">vs previous month</th><th>Days</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section aria-labelledby="groups-h">
+    <h2 id="groups-h">Where the money goes</h2>
+    <figure class="bars" id="groups"></figure>
+  </section>
+
+  <section aria-labelledby="items-h">
+    <h2 id="items-h">The basket, line by line</h2>
+    <p class="muted" id="items-intro"></p>
+    <div class="table-scroll">
+      <table id="items-table">
+        <thead><tr><th>Item</th><th class="num">Weekly qty</th><th class="num">Unit price</th><th class="num">Weekly cost</th><th>Promotion</th><th class="num">Since start</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="cards">
+    <article class="card">
+      <h2>Headline index <span class="badge">in preparation</span></h2>
+      <p>A second series, weighted with CyStat's Household Budget Survey shares so it is directly comparable to the official Consumer Price Index for food and non-alcoholic beverages. It uses Jevons elementary aggregates over unit prices within each COICOP class. It publishes monthly once the product classification is complete.</p>
+      <p class="muted">Comparison series: CyStat CPI, ECOICOP 2 classification, 2025 = 100.</p>
+    </article>
+    <article class="card">
+      <h2>Method in brief</h2>
+      <ul>
+        <li><strong>Unit prices only.</strong> Everything is €/kg, €/L or €/piece, so a pack that shrinks at the same shelf price reads as inflation.</li>
+        <li><strong>Fixed basket.</strong> Nothing enters or leaves for twelve months. Re-based each January and chain-linked.</li>
+        <li><strong>Paid price is the headline.</strong> Promotional prices open to everyone count, as in the official CPI. Shelf prices and the promotional gap are published alongside.</li>
+        <li><strong>Churn is imputed, not dropped.</strong> A delisted or out-of-stock line takes its group's movement. Last prices are never carried forward silently.</li>
+        <li><strong>Geometric means.</strong> Within a class, items are combined with the Jevons formula, not by averaging prices.</li>
+      </ul>
+    </article>
+    <article class="card">
+      <h2>Data</h2>
+      <p>Prices are collected once a day from Alphamega's public online catalogue. Branch differences are stock, not price. Everything shown here is reproducible from the published files.</p>
+      <ul class="links">
+        <li><a href="data/basket/real_basket.csv">Basket definition</a> · 60 lines with weekly quantities</li>
+        <li><a href="data/basket/prices.csv">Basket price panel</a> · one row per item per day</li>
+        <li><a href="data/summary/daily.csv">Daily catalogue summary</a></li>
+        <li><a href="data/catalogue/products.csv">Product master</a> · ids, EANs, categories, no prices</li>
+        <li><a href="https://github.com/George649451/cy-grocery-index">Source code and methodology</a></li>
+      </ul>
+    </article>
+  </section>
+
+</main>
+
+<footer class="wrap">
+  <p>An independent project. Not affiliated with or endorsed by Alphamega or the Statistical Service of Cyprus. Product names and images belong to their owners. Series start 12 September 2026.</p>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

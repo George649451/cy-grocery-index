@@ -231,12 +231,10 @@ def upsert_csv(path: str, row: dict, fields: list[str], key: str = "date") -> No
 
 
 def price_changed(prev: dict, cur: dict) -> bool:
-    """A change in any price-relevant field, ignoring fields the previous state did not know."""
+    """A change in any price-relevant field. A field that was unknown before and is known
+    now also counts, so the change-log can always be replayed into a complete state."""
     for f in PRICE_FIELDS:
-        pv = prev.get(f, "")
-        if pv == "":
-            continue
-        if pv != cur.get(f, ""):
+        if prev.get(f, "") != cur.get(f, ""):
             return True
     return False
 
