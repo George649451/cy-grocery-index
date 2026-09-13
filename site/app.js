@@ -6,12 +6,12 @@
   const el = id => document.getElementById(id);
   const b = d.basket, g = d.generated_from, c = d.catalogue;
 
-  el('mosaic').innerHTML = b.items.slice(0, 24).map((it, i) => `<img src="${it.image}" alt="" loading="eager" decoding="async" style="animation-delay:${(i * 35)}ms" onerror="this.remove()">`).join('');
+  el('mosaic').innerHTML = b.items.slice(0, 36).map((it, i) => `<img src="${it.image}" alt="" loading="eager" decoding="async" style="animation-delay:${(i * 20)}ms" onerror="this.remove()">`).join('');
 
   el('status').textContent = `Last collection ${fmtDate(g.latest)} · ${c.products.toLocaleString('en-GB')} products tracked · ${g.collection_days} day${g.collection_days === 1 ? '' : 's'} of data since ${fmtDate(g.start)}`;
 
   // hero
-  countUp(el('hero-cost'), b.latest_cost);
+  el('hero-cost').textContent = b.latest_cost.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   el('hero-sub').textContent = `${b.household} · ${b.lines} lines · paid prices on ${fmtDate(g.latest)}`;
 
   const complete = b.monthly.filter(m => m.complete);
@@ -35,10 +35,6 @@
   el('tile-cat-promo-sub').textContent = c.promo_labelled ? `${c.promo_labelled.toLocaleString('en-GB')} of ${c.products.toLocaleString('en-GB')} lines carry a promotion label` : '';
 
   function nextMonth(m) { const [y, mo] = m.split('-').map(Number); return mo === 12 ? `${y + 1}-01` : `${y}-${String(mo + 1).padStart(2, '0')}`; }
-
-  // reveal sections as they enter the viewport
-  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -8% 0px' });
-  document.querySelectorAll('.reveal').forEach(n => io.observe(n));
 
   // chart
   drawChart(el('chart'), b.series);
