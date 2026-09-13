@@ -1,0 +1,6 @@
+key,name,status,started,source,note
+groceries,Groceries,live,2026-09-12,Alphamega online catalogue (15k products daily),Real basket published now; CPI-weighted headline index in preparation
+fuel,Fuel,planned,,Retail Fuel Price Observatory (gov.cy) — per-station daily prices,Unleaded 95 / diesel / heating oil; national and by district
+transport,Transport,planned,,Public bus fares; taxi tariffs; airport parking,Regulated fares change rarely so this is a register of changes rather than a daily series
+eating-out,Eating out,planned,,Menu prices for a fixed set of dishes (souvla; halloumi pitta; coffee; beer),Source and method to be decided; delivery platforms have restrictive terms
+utilities,Utilities,planned,,EAC electricity tariffs and monthly fuel adjustment; water boards,Published tariffs; monthly

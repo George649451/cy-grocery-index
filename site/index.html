@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Cyprus Grocery Price Index</title>
-<meta name="description" content="An independent, daily-collected measure of grocery price inflation in Cyprus, built from Alphamega's online catalogue and comparable to the official CPI.">
+<title>Cyprus Price Index</title>
+<meta name="description" content="An independent tracker of what everyday life costs in Cyprus: groceries now, fuel, transport, eating out and utilities to follow. Collected daily, published monthly, comparable to the official CPI.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -14,18 +14,26 @@
 <div class="wrap">
 
   <nav class="topbar">
-    <span class="brand">Cyprus Grocery Price Index</span>
+    <span class="brand">Cyprus Price Index</span>
     <span class="topbar-mid">Independent · Collected daily · Published monthly</span>
-    <span class="topbar-links"><a href="#data">Data</a><a href="https://github.com/George649451/cy-grocery-index">GitHub</a></span>
+    <span class="topbar-links" id="topnav"><a href="#groceries">Groceries</a><a href="#coming">Coming</a><a href="#data">Data</a><a href="https://github.com/George649451/cy-grocery-index">GitHub</a></span>
   </nav>
 
   <header class="masthead">
-    <h1>Cyprus<br>Grocery<br>Price Index</h1>
+    <h1>Cyprus<br>Price<br>Index</h1>
     <div class="masthead-side">
-      <p class="lede">What a real weekly shop costs in Cyprus, measured properly: unit prices, a fixed basket, and a method that lines up with the official statistics closely enough to be compared with them.</p>
+      <p class="lede">What everyday life costs in Cyprus, measured properly. Fixed baskets, unit prices, and methods that line up with the official statistics closely enough to be compared with them. Groceries first; fuel, transport, eating out and utilities to follow.</p>
       <p class="status" id="status">Loading…</p>
     </div>
   </header>
+
+  <section class="coverage" id="coverage" aria-label="Coverage"></section>
+
+  <section class="module-head" id="groceries">
+    <span class="n">Module 01</span>
+    <h2>Groceries</h2>
+    <p class="module-meta" id="groceries-meta">—</p>
+  </section>
 
   <section class="stats" aria-label="Key figures">
     <div class="stat stat-hero">
@@ -43,7 +51,7 @@
   </section>
 
   <section class="sec" aria-labelledby="chart-h">
-    <div class="sec-label"><span class="n">01</span><h2 id="chart-h">Weekly cost of the basket</h2><p>Daily observations at paid prices. Inflation figures are published as monthly averages; the daily line is the raw data behind them.</p></div>
+    <div class="sec-label"><span class="n">01.1</span><h2 id="chart-h">Weekly cost of the basket</h2><p>Daily observations at paid prices. Inflation figures are published as monthly averages; the daily line is the raw data behind them.</p></div>
     <div class="sec-body">
       <figure class="chart" id="chart"></figure>
       <div class="table-scroll">
@@ -57,12 +65,12 @@
   </section>
 
   <section class="sec" aria-labelledby="groups-h">
-    <div class="sec-label"><span class="n">02</span><h2 id="groups-h">Where the money goes</h2><p>Weekly cost by group, at today's prices.</p></div>
+    <div class="sec-label"><span class="n">01.2</span><h2 id="groups-h">Where the money goes</h2><p>Weekly cost by group, at today's prices.</p></div>
     <div class="sec-body"><figure class="bars" id="groups"></figure></div>
   </section>
 
   <section class="sec" aria-labelledby="items-h">
-    <div class="sec-label"><span class="n">03</span><h2 id="items-h">The basket, line by line</h2><p id="items-intro"></p></div>
+    <div class="sec-label"><span class="n">01.3</span><h2 id="items-h">The basket, line by line</h2><p id="items-intro"></p></div>
     <div class="sec-body">
       <div class="table-scroll">
         <table id="items-table">
@@ -73,15 +81,22 @@
     </div>
   </section>
 
+  <section class="module-head" id="coming">
+    <span class="n">Modules 02–05</span>
+    <h2>Coming next</h2>
+    <p class="module-meta">Each module gets the same treatment: a fixed basket, a published method, raw data alongside. Nothing is shown until it has been collected for long enough to mean something.</p>
+  </section>
+  <section class="coming" id="coming-list" aria-label="Planned modules"></section>
+
   <section class="sec cols3" id="data">
     <div class="col">
-      <span class="n">04</span>
+      <span class="n">Groceries</span>
       <h2>Headline index <span class="badge">In preparation</span></h2>
       <p>A second series, weighted with CyStat's Household Budget Survey shares so it is directly comparable to the official Consumer Price Index for food and non-alcoholic beverages. Jevons elementary aggregates over unit prices within each COICOP class. Publishes monthly once the product classification is complete.</p>
       <p class="small">Comparison series: CyStat CPI, ECOICOP 2 classification, 2025 = 100.</p>
     </div>
     <div class="col">
-      <span class="n">05</span>
+      <span class="n">Groceries</span>
       <h2>Method</h2>
       <ul>
         <li><strong>Unit prices only.</strong> €/kg, €/L or €/piece, so a pack that shrinks at the same shelf price reads as inflation.</li>
@@ -92,7 +107,7 @@
       </ul>
     </div>
     <div class="col">
-      <span class="n">06</span>
+      <span class="n">All modules</span>
       <h2>Data</h2>
       <p>Collected once a day from Alphamega's public online catalogue. Branch differences are stock, not price. Everything on this page is reproducible from the published files.</p>
       <ul class="links">

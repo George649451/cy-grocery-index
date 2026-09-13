@@ -35,6 +35,8 @@ def main() -> int:
     panel = read(os.path.join(a.public_dir, "basket", "prices.csv"))
     daily = read(os.path.join(a.public_dir, "summary", "daily.csv"))
     master = {r["id"]: r for r in read(os.path.join(a.public_dir, "catalogue", "products.csv"))}
+    modules_path = os.path.join(a.public_dir, "modules.csv")
+    modules = read(modules_path) if os.path.exists(modules_path) else []
 
     dates = sorted({r["date"] for r in panel})
     start, latest = dates[0], dates[-1]
@@ -124,6 +126,7 @@ def main() -> int:
     promo_depth = round(100 * (1 - sum(it["pack_price"] for it in with_orig) / sum(it["original_price"] for it in with_orig)), 1) if with_orig else None
 
     out = {
+        "modules": modules,
         "generated_from": {"start": start, "latest": latest, "collection_days": len(dates)},
         "basket": {
             "household": "two adults, two school-age children",

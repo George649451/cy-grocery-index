@@ -8,6 +8,13 @@
 
   el('mosaic').innerHTML = b.items.slice(0, 36).map((it, i) => `<img src="${it.image}" alt="" loading="eager" decoding="async" style="animation-delay:${(i * 20)}ms" onerror="this.remove()">`).join('');
 
+  // coverage row and planned modules
+  const fmtShort = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+  el('coverage').innerHTML = d.modules.map(m => `<div class="cov"><div class="name">${esc(m.name)}<span class="tag ${m.status}">${m.status}</span></div><div class="src">${m.status === 'live' ? 'Since ' + fmtShort(m.started) + ' · ' : ''}${esc(m.source)}</div></div>`).join('');
+  el('coming-list').innerHTML = d.modules.filter(m => m.status !== 'live').map((m, i) => `<div class="row"><span class="name">${esc(m.name)}</span><span class="src">${esc(m.source)}</span><span class="note">${esc(m.note)}</span><span class="st"><span class="tag ${m.status}">${m.status}</span></span></div>`).join('');
+  const groc = d.modules.find(m => m.key === 'groceries');
+  el('groceries-meta').textContent = `Live since ${fmtShort(groc?.started || g.start)}. ${esc(groc?.note || '')}`;
+
   el('status').textContent = `Last collection ${fmtDate(g.latest)} · ${c.products.toLocaleString('en-GB')} products tracked · ${g.collection_days} day${g.collection_days === 1 ? '' : 's'} of data since ${fmtDate(g.start)}`;
 
   // hero

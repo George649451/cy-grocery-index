@@ -121,3 +121,31 @@ footer { display: flex; justify-content: space-between; gap: 24px; flex-wrap: wr
 
 /* motion */
 @media (prefers-reduced-motion: reduce) { .bar, .mosaic img { animation: none; opacity: 1; } html { scroll-behavior: auto; } }
+
+/* coverage row */
+.coverage { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border-top: 1px solid var(--rule-2); border-bottom: 1px solid var(--rule); }
+.cov { padding: 18px 20px 20px 0; border-left: 1px solid var(--rule); padding-left: 20px; min-width: 0; }
+.cov:first-child { border-left: 0; padding-left: 0; }
+.cov .name { font-size: 15px; font-weight: 500; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.cov .src { margin-top: 8px; font-size: 13px; color: var(--ink-3); font-weight: 400; line-height: 1.4; }
+.tag { display: inline-block; font-size: 10px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; padding: 2px 7px; border: 1px solid var(--rule-2); }
+.tag.live { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.tag.planned { color: var(--ink-3); border-color: var(--rule); }
+@media (max-width: 860px) { .coverage { grid-template-columns: 1fr; } .cov { border-left: 0; padding-left: 0; border-top: 1px solid var(--rule); } .cov:first-child { border-top: 0; } }
+
+/* module headers */
+.module-head { padding: 72px 0 28px; margin-top: 56px; border-top: 1px solid var(--rule-2); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2.4fr); gap: 40px; align-items: end; }
+.module-head .n { grid-column: 1 / -1; font-size: 12px; font-weight: 500; letter-spacing: .1em; color: var(--ink-3); }
+.module-head h2 { font-size: clamp(2.6rem, 6vw, 5rem); line-height: .95; text-transform: uppercase; letter-spacing: -.03em; }
+.module-meta { color: var(--ink-2); font-size: 16px; max-width: 46ch; }
+.module-head + .stats { border-top: 1px solid var(--rule); }
+@media (max-width: 860px) { .module-head { grid-template-columns: 1fr; gap: 16px; padding: 48px 0 20px; margin-top: 32px; } }
+
+/* planned modules list */
+.coming { border-top: 1px solid var(--rule); }
+.coming .row { display: grid; grid-template-columns: 120px minmax(0, 1fr) minmax(0, 1.6fr) 90px; gap: 24px; padding: 18px 0; border-bottom: 1px solid var(--rule); align-items: baseline; font-size: 15px; }
+.coming .row .name { font-weight: 500; font-size: 17px; }
+.coming .row .src, .coming .row .note { color: var(--ink-2); font-weight: 400; line-height: 1.45; }
+.coming .row .note { color: var(--ink-3); font-size: 14px; }
+.coming .row .st { text-align: right; }
+@media (max-width: 860px) { .coming .row { grid-template-columns: 1fr; gap: 6px; } .coming .row .st { text-align: left; } }

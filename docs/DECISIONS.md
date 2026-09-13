@@ -19,3 +19,7 @@ Resolved 13 September 2026 before any code was written.
 - Legacy snapshot has 15,207 distinct ids, not the 14,923 stated in the brief.
 - Promotion types and `originalPrice`: every **Price Drop** item sampled carries a non-zero `originalPrice`; **Only** and **Mix & Match** items mostly carry `originalPrice: 0`, so for those the pre-promotion shelf price is not recoverable from the API. The shelf-price series therefore understates promotional depth for label-only promotions; the label itself is collected daily so this can be quantified.
 - The API accepts `fields=*,promotion` (returns all 65 fields plus the label) and `sort=uniqueId asc`, giving deterministic pagination.
+
+## Scope of the site (13 September 2026)
+
+The site is a general **Cyprus Price Index**, not a grocery-only page. Groceries is module 01; fuel, transport, eating out and utilities are declared as planned modules in `data/modules.csv` and shown on the page with an honest status. Candidate sources: the government [Retail Fuel Price Observatory](https://www.gov.cy/en/service/retail-fuel-price-observatory/) for fuel; regulated bus and taxi tariffs for transport; EAC tariffs and the monthly fuel adjustment for utilities. Eating out has no obvious open source yet. The repository name stays `cy-grocery-index` for now; renaming it would change the Pages URL.
