@@ -6,10 +6,12 @@
   const el = id => document.getElementById(id);
   const b = d.basket, g = d.generated_from, c = d.catalogue;
 
+  el('mosaic').innerHTML = b.items.slice(0, 24).map((it, i) => `<img src="${it.image}" alt="" loading="eager" decoding="async" style="animation-delay:${(i * 35)}ms" onerror="this.remove()">`).join('');
+
   el('status').textContent = `Last collection ${fmtDate(g.latest)} · ${c.products.toLocaleString('en-GB')} products tracked · ${g.collection_days} day${g.collection_days === 1 ? '' : 's'} of data since ${fmtDate(g.start)}`;
 
   // hero
-  el('hero-cost').textContent = eur(b.latest_cost);
+  countUp(el('hero-cost'), b.latest_cost);
   el('hero-sub').textContent = `${b.household} · ${b.lines} lines · paid prices on ${fmtDate(g.latest)}`;
 
   const complete = b.monthly.filter(m => m.complete);
@@ -33,6 +35,10 @@
   el('tile-cat-promo-sub').textContent = c.promo_labelled ? `${c.promo_labelled.toLocaleString('en-GB')} of ${c.products.toLocaleString('en-GB')} lines carry a promotion label` : '';
 
   function nextMonth(m) { const [y, mo] = m.split('-').map(Number); return mo === 12 ? `${y + 1}-01` : `${y}-${String(mo + 1).padStart(2, '0')}`; }
+
+  // reveal sections as they enter the viewport
+  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -8% 0px' });
+  document.querySelectorAll('.reveal').forEach(n => io.observe(n));
 
   // chart
   drawChart(el('chart'), b.series);
@@ -64,7 +70,7 @@
     }
     const chg = (it.unit_price != null && it.unit_price_start) ? 100 * (it.unit_price / it.unit_price_start - 1) : null;
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td><a href="${it.url}" rel="noopener">${esc(it.title)}</a><span class="note">${esc(it.note)}</span></td>
+    tr.innerHTML = `<td><div class="item"><img src="${it.image}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><div><a class="t" href="${it.url}" rel="noopener">${esc(it.title)}</a><span class="note">${esc(it.note)}</span></div></div></td>
       <td class="num">${fmtQty(it.qty)} ${it.basis}</td>
       <td class="num">${eur(it.unit_price)}/${it.basis}${it.unit_price_source === 'title' ? '†' : ''}</td>
       <td class="num">${eur(it.weekly_cost)}</td>
@@ -73,6 +79,13 @@
     tb.appendChild(tr);
   });
 
+  function countUp(node, target) {
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const fmt = v => v.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    if (reduce) { node.textContent = fmt(target); return; }
+    const t0 = performance.now(), dur = 1100, from = target * 0.9;
+    (function step(t) { const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3); node.textContent = fmt(from + (target - from) * e); if (k < 1) requestAnimationFrame(step); })(t0);
+  }
   function cls(v) { return v == null || Math.abs(v) < 0.05 ? 'flat' : v > 0 ? 'up' : 'down'; }
   function fmtQty(q) { return Number.isInteger(q) ? q : q.toLocaleString('en-GB', { maximumFractionDigits: 3 }); }
   function esc(s) { return String(s).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch])); }
@@ -97,6 +110,10 @@
     let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Weekly basket cost over time">`;
     svg += yticks.map(v => `<line class="grid" x1="${m.l}" x2="${W - m.r}" y1="${Y(v)}" y2="${Y(v)}"/><text class="axis" x="${m.l - 8}" y="${Y(v) + 4}" text-anchor="end">€${v}</text>`).join('');
     svg += xt.map(t => `<text class="axis" x="${X(t)}" y="${H - 12}" text-anchor="middle">${new Date(t).toLocaleDateString('en-GB', { month: 'short', year: '2-digit' })}</text>`).join('');
+    if (!xt.length || xt[0] - x0 > 3 * 864e5) svg += `<text class="axis" x="${X(x0)}" y="${H - 12}" text-anchor="start">${new Date(x0).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</text>`;
+    const area = path + ` L${X(xs[xs.length - 1]).toFixed(1)},${(H - m.b).toFixed(1)} L${X(xs[0]).toFixed(1)},${(H - m.b).toFixed(1)} Z`;
+    svg += `<defs><linearGradient id="areaFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#2a78d6" stop-opacity=".22"/><stop offset="1" stop-color="#2a78d6" stop-opacity="0"/></linearGradient></defs>`;
+    if (series.length >= 3) svg += `<path class="area" d="${area}"/>`;
     svg += `<path class="line" d="${path}"/>`;
     if (showDots) svg += series.map((s, i) => `<circle class="dot" r="4" cx="${X(xs[i])}" cy="${Y(ys[i])}"/>`).join('');
     svg += `<text class="endlabel" x="${X(xs[xs.length - 1]) + 10}" y="${Y(last.cost) + 4}">${eur(last.cost)}</text>`;
@@ -113,6 +130,6 @@
     });
     svgEl.addEventListener('mouseleave', () => { tip.style.display = 'none'; xh.style.display = 'none'; });
     function niceStep(raw) { const p = Math.pow(10, Math.floor(Math.log10(raw))); const f = raw / p; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * p; }
-    function monthTicks(a, z) { const out = []; const d0 = new Date(a); d0.setDate(1); for (let d = new Date(d0); d.getTime() <= z; d.setMonth(d.getMonth() + 1)) if (d.getTime() >= a - 864e5 * 15) out.push(d.getTime()); return out.length ? out : [a]; }
+    function monthTicks(a, z) { const out = []; const d0 = new Date(a); d0.setDate(1); for (let d = new Date(d0); d.getTime() <= z; d.setMonth(d.getMonth() + 1)) if (d.getTime() >= a + 864e5 * 3) out.push(d.getTime()); return out; }
   }
 })().catch(e => { document.getElementById('status').textContent = 'Could not load data: ' + e.message; });
