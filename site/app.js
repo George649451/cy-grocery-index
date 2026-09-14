@@ -82,6 +82,81 @@
     tb.appendChild(tr);
   });
 
+  // ---------------- fuel module
+  if (d.fuel) renderFuel(d.fuel);
+  function renderFuel(f) {
+    const L = f.names, order = f.order;
+    const eurL = v => v == null ? '—' : '€' + v.toFixed(3);
+    el('fuel-meta').textContent = `Live since ${fmtDate(f.start)}. ${f.stations} stations reporting to the government observatory; every station, every day.`;
+    const main = ['unleaded95', 'diesel', 'heating_oil'];
+    el('fuel-stats').innerHTML = main.map(k => { const n = f.national[k]; if (!n) return ''; return `<div class="stat"><p class="label">${L[k]} · national median</p><p class="value">${eurL(n.median)}<span class="delta"> /L</span></p><p class="sub">${n.n} stations · cheapest ${eurL(n.min)} · dearest ${eurL(n.max)}</p></div>`; }).join('')
+      + `<div class="stat"><p class="label">Spread · unleaded 95</p><p class="value">${eurL(f.national.unleaded95.max - f.national.unleaded95.min).replace('€','')}<span class="delta"> €/L</span></p><p class="sub">between the dearest and cheapest station in Cyprus today</p></div>`;
+    drawMulti(el('fuel-chart'), [
+      { key: 'unleaded95', label: L.unleaded95, cls: 's1', pts: f.series.unleaded95.map(p => ({ date: p.date, v: p.median })) },
+      { key: 'diesel', label: L.diesel, cls: 's2', pts: f.series.diesel.map(p => ({ date: p.date, v: p.median })) },
+    ]);
+    // monthly table
+    const months = [...new Set(order.flatMap(k => f.monthly[k].map(m => m.month)))].sort();
+    el('fuel-monthly').querySelector('tbody').innerHTML = months.map(m => {
+      const cell = k => { const r = f.monthly[k].find(x => x.month === m); return r ? eurL(r.median) : '—'; };
+      const days = (f.monthly.unleaded95.find(x => x.month === m) || {}).days ?? '';
+      const complete = (f.monthly.unleaded95.find(x => x.month === m) || {}).complete;
+      return `<tr><td>${fmtMonth(m)}${complete ? '' : ' <span class="chip">in progress</span>'}</td>${['unleaded95','diesel','unleaded98','heating_oil','kerosene'].map(k => `<td class="num">${cell(k)}</td>`).join('')}<td class="num">${days}</td></tr>`;
+    }).join('');
+    // districts
+    el('fuel-districts').querySelector('tbody').innerHTML = f.districts.map(r => {
+      const c = k => r[k] ? `${eurL(r[k].median)}<span class="delta"> ${eurL(r[k].min).replace('€','')}–${eurL(r[k].max).replace('€','')}</span>` : '—';
+      return `<tr><td>${esc(r.district)}</td><td class="num">${r.unleaded95 ? r.unleaded95.n : '—'}</td>${['unleaded95','diesel','unleaded98','heating_oil'].map(k => `<td class="num">${c(k)}</td>`).join('')}</tr>`;
+    }).join('');
+    // brands
+    const n95 = f.national.unleaded95.median, nd = f.national.diesel.median;
+    const dv = (v, ref) => v == null ? '—' : (v - ref >= 0 ? '+' : '−') + Math.abs(v - ref).toFixed(3);
+    const fc = v => v == null || Math.abs(v) < 0.0005 ? 'flat' : v > 0 ? 'up' : 'down';
+    el('fuel-brands').querySelector('tbody').innerHTML = f.brands.map(b => `<tr><td>${esc(b.brand)}</td><td class="num">${b.n}</td><td class="num">${eurL(b.unleaded95)}</td><td class="num ${fc(b.unleaded95 - n95)}">${dv(b.unleaded95, n95)}</td><td class="num">${eurL(b.diesel)}</td><td class="num ${fc(b.diesel == null ? null : b.diesel - nd)}">${dv(b.diesel, nd)}</td></tr>`).join('');
+  }
+
+  function drawMulti(host, seriesList) {
+    const W = 1000, H = 340, m = { t: 24, r: 110, b: 36, l: 56 };
+    const all = seriesList.flatMap(s => s.pts);
+    const xs = all.map(p => new Date(p.date + 'T00:00:00').getTime());
+    let x0 = Math.min(...xs), x1 = Math.max(...xs);
+    if (x1 - x0 < 6 * 864e5) x1 = x0 + 30 * 864e5;
+    let ymin = Math.min(...all.map(p => p.v)), ymax = Math.max(...all.map(p => p.v));
+    const pad = Math.max((ymax - ymin) * 0.15, 0.02);
+    ymin = Math.floor((ymin - pad) * 20) / 20; ymax = Math.ceil((ymax + pad) * 20) / 20;
+    const X = t => m.l + (t - x0) / (x1 - x0) * (W - m.l - m.r);
+    const Y = v => m.t + (1 - (v - ymin) / (ymax - ymin)) * (H - m.t - m.b);
+    const step = (ymax - ymin) / 4;
+    const yt = []; for (let v = ymin; v <= ymax + 1e-9; v += step) yt.push(v);
+    let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="National median fuel price per litre over time">`;
+    svg += yt.map(v => `<line class="grid" x1="${m.l}" x2="${W - m.r}" y1="${Y(v)}" y2="${Y(v)}"/><text class="axis" x="${m.l - 8}" y="${Y(v) + 4}" text-anchor="end">€${v.toFixed(2)}</text>`).join('');
+    const mt = []; const d0 = new Date(x0); d0.setDate(1); for (let dd = new Date(d0); dd.getTime() <= x1; dd.setMonth(dd.getMonth() + 1)) if (dd.getTime() >= x0 + 3 * 864e5) mt.push(dd.getTime());
+    svg += mt.map(t => `<text class="axis" x="${X(t)}" y="${H - 12}" text-anchor="middle">${new Date(t).toLocaleDateString('en-GB', { month: 'short', year: '2-digit' })}</text>`).join('');
+    if (!mt.length || mt[0] - x0 > 3 * 864e5) svg += `<text class="axis" x="${X(x0)}" y="${H - 12}" text-anchor="start">${new Date(x0).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</text>`;
+    seriesList.forEach(s => {
+      const T = s.pts.map(p => new Date(p.date + 'T00:00:00').getTime());
+      const path = s.pts.map((p, i) => `${i ? 'L' : 'M'}${X(T[i]).toFixed(1)},${Y(p.v).toFixed(1)}`).join(' ');
+      svg += `<path class="line ${s.cls}" d="${path}"/>`;
+      if (s.pts.length <= 62) svg += s.pts.map((p, i) => `<circle class="dot ${s.cls}" r="4" cx="${X(T[i])}" cy="${Y(p.v)}"/>`).join('');
+      const last = s.pts[s.pts.length - 1];
+      svg += `<text class="endlabel" x="${X(T[T.length - 1]) + 10}" y="${Y(last.v) + 4}">€${last.v.toFixed(3)}</text>`;
+    });
+    svg += `<line class="crosshair" x1="0" x2="0" y1="${m.t}" y2="${H - m.b}" style="display:none"/><rect class="hit" x="${m.l}" y="${m.t}" width="${W - m.l - m.r}" height="${H - m.t - m.b}"/></svg>`;
+    svg += `<div class="legend">${seriesList.map(s => `<span class="${s.cls}">${esc(s.label)}</span>`).join('')}</div><div class="tooltip"></div>`;
+    host.innerHTML = svg;
+    const svgEl = host.querySelector('svg'), tip = host.querySelector('.tooltip'), xh = host.querySelector('.crosshair');
+    const dates = [...new Set(all.map(p => p.date))].sort(); const DT = dates.map(dd => new Date(dd + 'T00:00:00').getTime());
+    svgEl.addEventListener('mousemove', ev => {
+      const r = svgEl.getBoundingClientRect(); const px = (ev.clientX - r.left) / r.width * W;
+      let best = 0, bd = Infinity; DT.forEach((t, i) => { const q = Math.abs(X(t) - px); if (q < bd) { bd = q; best = i; } });
+      xh.setAttribute('x1', X(DT[best])); xh.setAttribute('x2', X(DT[best])); xh.style.display = '';
+      const vals = seriesList.map(s => { const p = s.pts.find(q => q.date === dates[best]); return p ? `${s.label} €${p.v.toFixed(3)}` : null; }).filter(Boolean).join(' · ');
+      tip.style.display = 'block'; tip.style.left = (X(DT[best]) / W * r.width) + 'px'; tip.style.top = (m.t / H * r.height + 14) + 'px';
+      tip.textContent = `${fmtDate(dates[best])} · ${vals}`;
+    });
+    svgEl.addEventListener('mouseleave', () => { tip.style.display = 'none'; xh.style.display = 'none'; });
+  }
+
   function countUp(node, target) {
     const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
     const fmt = v => v.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });

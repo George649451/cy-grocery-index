@@ -23,3 +23,9 @@ Resolved 13 September 2026 before any code was written.
 ## Scope of the site (13 September 2026)
 
 The site is a general **Cyprus Price Index**, not a grocery-only page. Groceries is module 01; fuel, transport, eating out and utilities are declared as planned modules in `data/modules.csv` and shown on the page with an honest status. Candidate sources: the government [Retail Fuel Price Observatory](https://www.gov.cy/en/service/retail-fuel-price-observatory/) for fuel; regulated bus and taxi tariffs for transport; EAC tariffs and the monthly fuel adjustment for utilities. Eating out has no obvious open source yet. The repository name stays `cy-grocery-index` for now; renaming it would change the Pages URL.
+
+## Module 02: Fuel (13 September 2026)
+
+Source: the Consumer Protection Service's Retail Fuel Price Observatory, an ASP.NET form at `eforms.eservices.cyprus.gov.cy/MCIT/MCIT/PetroleumPrices`, posted per fuel type × district with the page's anti-forgery token. 25 queries a day cover every station (317 on day one; 1,526 station × fuel prices). The server takes ~12 s per query. Station coordinates come from the map links. There is no station id, so stations are keyed by a hash of brand, name, address, area and district.
+
+Published measure: the **national median price per litre** per fuel, daily, with monthly averages as the headline; district medians and brand medians alongside. Median rather than mean because station prices are bounded and skewed by a few outliers. All fuel data is public in this repo: it is government open data, so the private-repo treatment used for the retailer catalogue does not apply.

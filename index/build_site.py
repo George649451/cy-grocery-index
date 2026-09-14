@@ -25,6 +25,65 @@ def fnum(x, default=None):
         return default
 
 
+FUEL_NAMES = {"unleaded95": "Unleaded 95", "unleaded98": "Unleaded 98", "diesel": "Diesel", "heating_oil": "Heating oil", "kerosene": "Kerosene"}
+FUEL_ORDER = ["unleaded95", "diesel", "unleaded98", "heating_oil", "kerosene"]
+DISTRICT_ORDER = ["Nicosia", "Limassol", "Larnaca", "Paphos", "Famagusta"]
+
+
+def build_fuel(public_dir):
+    path = os.path.join(public_dir, "fuel", "daily.csv")
+    if not os.path.exists(path):
+        return None
+    daily = read(path)
+    if not daily:
+        return None
+    dates = sorted({r["date"] for r in daily})
+    latest = dates[-1]
+    nat = {r["fuel"]: r for r in daily if r["date"] == latest and r["district"] == "Cyprus"}
+    first = {r["fuel"]: r for r in daily if r["date"] == dates[0] and r["district"] == "Cyprus"}
+    series = {f: [{"date": r["date"], "median": fnum(r["median"]), "n": int(r["n"])} for r in sorted(daily, key=lambda x: x["date"]) if r["fuel"] == f and r["district"] == "Cyprus"] for f in FUEL_ORDER}
+    # monthly averages of the national median
+    monthly = {}
+    for f in FUEL_ORDER:
+        by_m = defaultdict(list)
+        for pt in series[f]:
+            by_m[pt["date"][:7]].append(pt["median"])
+        monthly[f] = [{"month": m, "median": round(statistics.mean(v), 3), "days": len(v), "complete": m < latest[:7]} for m, v in sorted(by_m.items())]
+    districts = []
+    for d in DISTRICT_ORDER:
+        row = {"district": d}
+        for f in FUEL_ORDER:
+            r = next((x for x in daily if x["date"] == latest and x["district"] == d and x["fuel"] == f), None)
+            row[f] = {"median": fnum(r["median"]), "min": fnum(r["min"]), "max": fnum(r["max"]), "n": int(r["n"])} if r else None
+        districts.append(row)
+    # brands: median by brand for the two main fuels, from latest.csv + stations.csv
+    brands = []
+    st_path, lt_path = os.path.join(public_dir, "fuel", "stations.csv"), os.path.join(public_dir, "fuel", "latest.csv")
+    if os.path.exists(st_path) and os.path.exists(lt_path):
+        st = {r["station_id"]: r for r in read(st_path)}
+        by_brand = defaultdict(lambda: defaultdict(list))
+        for r in read(lt_path):
+            if r.get("delisted_on"):
+                continue
+            b = st.get(r["station_id"], {}).get("brand", "?")
+            by_brand[b][r["fuel"]].append(float(r["price"]))
+        for b, fuels in by_brand.items():
+            n = len(fuels.get("unleaded95", []))
+            if n >= 3:
+                brands.append({"brand": b, "n": n,
+                               "unleaded95": round(statistics.median(fuels["unleaded95"]), 3) if fuels.get("unleaded95") else None,
+                               "diesel": round(statistics.median(fuels["diesel"]), 3) if fuels.get("diesel") else None})
+        brands.sort(key=lambda x: (x["unleaded95"] is None, x["unleaded95"] or 0))
+    return {
+        "start": dates[0], "latest": latest, "collection_days": len(dates),
+        "names": FUEL_NAMES, "order": FUEL_ORDER,
+        "national": {f: {"median": fnum(nat[f]["median"]), "mean": fnum(nat[f]["mean"]), "min": fnum(nat[f]["min"]), "max": fnum(nat[f]["max"]), "n": int(nat[f]["n"]),
+                         "median_start": fnum(first[f]["median"]) if f in first else None} for f in FUEL_ORDER if f in nat},
+        "stations": max(int(r["n"]) for r in nat.values()) if nat else 0,
+        "series": series, "monthly": monthly, "districts": districts, "brands": brands,
+    }
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--public-dir", default="data")
@@ -125,8 +184,11 @@ def main() -> int:
     with_orig = [it for it in items if it["original_price"] and it["pack_price"]]
     promo_depth = round(100 * (1 - sum(it["pack_price"] for it in with_orig) / sum(it["original_price"] for it in with_orig)), 1) if with_orig else None
 
+    fuel = build_fuel(a.public_dir)
+
     out = {
         "modules": modules,
+        "fuel": fuel,
         "generated_from": {"start": start, "latest": latest, "collection_days": len(dates)},
         "basket": {
             "household": "two adults, two school-age children",

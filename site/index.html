@@ -16,7 +16,7 @@
   <nav class="topbar">
     <span class="brand">Cyprus Price Index</span>
     <span class="topbar-mid">Independent · Collected daily · Published monthly</span>
-    <span class="topbar-links" id="topnav"><a href="#groceries">Groceries</a><a href="#coming">Coming</a><a href="#data">Data</a><a href="https://github.com/George649451/cy-grocery-index">GitHub</a></span>
+    <span class="topbar-links" id="topnav"><a href="#groceries">Groceries</a><a href="#fuel">Fuel</a><a href="#coming">Coming</a><a href="#data">Data</a><a href="https://github.com/George649451/cy-grocery-index">GitHub</a></span>
   </nav>
 
   <header class="masthead">
@@ -81,8 +81,54 @@
     </div>
   </section>
 
+  <section class="module-head" id="fuel">
+    <span class="n">Module 02</span>
+    <h2>Fuel</h2>
+    <p class="module-meta" id="fuel-meta">—</p>
+  </section>
+
+  <section class="stats stats-fuel" id="fuel-stats" aria-label="Fuel key figures"></section>
+
+  <section class="sec" aria-labelledby="fuel-chart-h">
+    <div class="sec-label"><span class="n">02.1</span><h2 id="fuel-chart-h">National median price per litre</h2><p>Median across every reporting station, daily. Monthly averages are the published reading.</p></div>
+    <div class="sec-body">
+      <figure class="chart" id="fuel-chart"></figure>
+      <div class="table-scroll">
+      <table id="fuel-monthly" class="compact">
+        <caption>Monthly readings · national median, €/L</caption>
+        <thead><tr><th>Month</th><th class="num">Unleaded 95</th><th class="num">Diesel</th><th class="num">Unleaded 98</th><th class="num">Heating oil</th><th class="num">Kerosene</th><th class="num">Days</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" aria-labelledby="fuel-district-h">
+    <div class="sec-label"><span class="n">02.2</span><h2 id="fuel-district-h">By district</h2><p>Median price today, with the cheapest and dearest station in each district.</p></div>
+    <div class="sec-body">
+      <div class="table-scroll">
+      <table id="fuel-districts">
+        <thead><tr><th>District</th><th class="num">Stations</th><th class="num">Unleaded 95</th><th class="num">Diesel</th><th class="num">Unleaded 98</th><th class="num">Heating oil</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" aria-labelledby="fuel-brand-h">
+    <div class="sec-label"><span class="n">02.3</span><h2 id="fuel-brand-h">By brand</h2><p>Median across each brand's stations today. Brands with fewer than three stations are left out.</p></div>
+    <div class="sec-body">
+      <div class="table-scroll">
+      <table id="fuel-brands">
+        <thead><tr><th>Brand</th><th class="num">Stations</th><th class="num">Unleaded 95</th><th class="num">vs national</th><th class="num">Diesel</th><th class="num">vs national</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      </div>
+    </div>
+  </section>
+
   <section class="module-head" id="coming">
-    <span class="n">Modules 02–05</span>
+    <span class="n">Modules 03–05</span>
     <h2>Coming next</h2>
     <p class="module-meta">Each module gets the same treatment: a fixed basket, a published method, raw data alongside. Nothing is shown until it has been collected for long enough to mean something.</p>
   </section>
@@ -111,6 +157,9 @@
       <h2>Data</h2>
       <p>Collected once a day from Alphamega's public online catalogue. Branch differences are stock, not price. Everything on this page is reproducible from the published files.</p>
       <ul class="links">
+        <li><a href="data/fuel/daily.csv">Fuel daily aggregates</a><span>fuel × district × day</span></li>
+        <li><a href="data/fuel/latest.csv">Fuel station prices</a><span>every station, current</span></li>
+        <li><a href="data/fuel/stations.csv">Fuel station master</a><span>brand, address, coordinates</span></li>
         <li><a href="data/basket/real_basket.csv">Basket definition</a><span>60 lines, weekly quantities</span></li>
         <li><a href="data/basket/prices.csv">Basket price panel</a><span>one row per item per day</span></li>
         <li><a href="data/summary/daily.csv">Daily catalogue summary</a></li>
