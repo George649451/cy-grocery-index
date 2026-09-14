@@ -1,3 +1,4 @@
 date,reported_total,distinct,available,with_unit_price,promo_with_original_price,promo_labelled,new,changed,delisted,relisted
 2026-09-12,15207,15207,,9790,1445,,15207,0,0,0
 2026-09-13,15214,15214,15214,9796,1445,3813,0,4,0,0
+2026-09-14,15214,15214,15214,9796,1244,3611,0,222,0,0
