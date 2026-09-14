@@ -1,2 +1,4 @@
 date,requests,stations,observations,new,changed,delisted,relisted,seconds,ok
 2026-09-13,26,317,1526,1526,0,0,0,312,1
+2026-09-14,26,122,122,0,0,0,0,10661,0
+2026-09-14,26,317,1526,0,212,0,0,285,1

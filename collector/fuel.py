@@ -27,6 +27,7 @@ import os
 import re
 import statistics
 import sys
+import threading
 import time
 from urllib.parse import urlencode
 from urllib.request import Request, build_opener, HTTPCookieProcessor
@@ -39,6 +40,11 @@ USER_AGENT = ("cy-price-index-bot/0.1 "
 TZ = ZoneInfo("Europe/Nicosia")
 FUELS = {"1": "unleaded95", "2": "unleaded98", "3": "diesel", "4": "heating_oil", "5": "kerosene"}
 DISTRICTS = ["Nicosia", "Limassol", "Larnaca", "Paphos", "Famagusta"]
+REQUEST_DEADLINE = 90      # seconds; the server normally answers in 12-16 s
+RETRIES = 3
+RUN_BUDGET = 25 * 60       # seconds for the whole fetch phase
+# Requests are strictly sequential: the ASP.NET session serialises them anyway, and a
+# parallel attempt on 14 Sep 2026 cascaded into read timeouts and a three-hour hang.
 
 STATE_FIELDS = ["key", "station_id", "fuel", "price", "first_seen", "last_seen", "delisted_on"]
 CHANGE_FIELDS = ["date", "key", "station_id", "fuel", "event", "price", "prev_price"]
@@ -53,19 +59,31 @@ def opener():
     return op
 
 
-def fetch(op, url, data=None, retries=4) -> str:
+def _fetch_once(op, url, data, box):
+    try:
+        req = Request(url, data=urlencode(data).encode() if data else None)
+        if data:
+            req.add_header("Content-Type", "application/x-www-form-urlencoded")
+        with op.open(req, timeout=45) as r:
+            box["body"] = r.read().decode("utf-8", "replace")
+    except Exception as e:  # noqa: BLE001
+        box["error"] = e
+
+
+def fetch(op, url, data=None, retries=RETRIES) -> str:
+    """Fetch with a hard wall-clock deadline per attempt, in a daemon thread so a server
+    that trickles a chunked body forever can neither stall the run nor block process exit."""
     last = None
     for attempt in range(retries):
-        try:
-            req = Request(url, data=urlencode(data).encode() if data else None)
-            if data:
-                req.add_header("Content-Type", "application/x-www-form-urlencoded")
-            with op.open(req, timeout=90) as r:
-                return r.read().decode("utf-8", "replace")
-        except Exception as e:  # noqa: BLE001
-            last = e
-            time.sleep(min(30, 3 * 2 ** attempt))
-    raise RuntimeError(f"failed: {url}: {last}")
+        box: dict = {}
+        t = threading.Thread(target=_fetch_once, args=(op, url, data, box), daemon=True)
+        t.start()
+        t.join(REQUEST_DEADLINE)
+        if "body" in box:
+            return box["body"]
+        last = box.get("error") or RuntimeError(f"no complete response within {REQUEST_DEADLINE}s")
+        time.sleep(min(20, 5 * 2 ** attempt))
+    raise RuntimeError(f"failed: {url} {data and data.get('Entity.PetroleumType')}/{data and data.get('Entity.StationCityEnum')}: {last}")
 
 
 def get_token(op) -> str:
@@ -155,18 +173,35 @@ def run(public_dir: str, date: str, dry_run: bool) -> int:
 
     observations: dict[str, dict] = {}   # key -> row
     stations: dict[str, dict] = {}
-    requests_made = 1
-    for fid, fuel in FUELS.items():
-        for district in DISTRICTS:
+    jobs = [(fid, fuel, district) for fid, fuel in FUELS.items() for district in DISTRICTS]
+    failed = []
+    deadline = time.time() + RUN_BUDGET
+    for fid, fuel, district in jobs:
+        if time.time() > deadline:
+            failed.append((fid, fuel, district))
+            continue
+        try:
             page = fetch(op, FORM, {"__RequestVerificationToken": token, "Entity.PetroleumType": fid,
                                     "Entity.StationCityEnum": district})
-            requests_made += 1
-            for r in parse_rows(page):
-                sid = station_id(r, district)
-                stations.setdefault(sid, {**r, "station_id": sid, "district": district})
-                observations[f"{sid}:{fuel}"] = {"key": f"{sid}:{fuel}", "station_id": sid, "fuel": fuel, "price": r["price"]}
-    print(f"[{date}] {requests_made} requests, {len(stations)} stations, {len(observations)} station x fuel prices", flush=True)
-    ok = len(observations) > 500  # a healthy day is ~1,000+
+        except Exception as e:  # noqa: BLE001
+            failed.append((fid, fuel, district))
+            print(f"[{date}] query {fuel}/{district} failed: {e}", file=sys.stderr, flush=True)
+            op = opener()          # fresh session and token for the next query
+            try:
+                token = get_token(op)
+            except Exception as e2:  # noqa: BLE001
+                print(f"[{date}] could not refresh token: {e2}", file=sys.stderr, flush=True)
+            continue
+        rows = parse_rows(page)
+        print(f"[{date}] {fuel}/{district}: {len(rows)} stations", flush=True)
+        for r in rows:
+            sid = station_id(r, district)
+            stations.setdefault(sid, {**r, "station_id": sid, "district": district})
+            observations[f"{sid}:{fuel}"] = {"key": f"{sid}:{fuel}", "station_id": sid, "fuel": fuel, "price": r["price"]}
+    requests_made = 1 + len(jobs)
+    print(f"[{date}] {len(jobs)} queries ({len(failed)} failed), {len(stations)} stations, {len(observations)} station x fuel prices", flush=True)
+    # a partial day would record spurious delistings for the missing queries, so require a full sweep
+    ok = not failed and len(observations) > 500
     if not ok:
         print(f"[{date}] ERROR too few observations; not writing state", file=sys.stderr, flush=True)
 
