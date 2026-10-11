@@ -1939,3 +1939,13 @@ date,key,station_id,fuel,event,price,prev_price
 2026-10-10,72bd542a8c85:kerosene,72bd542a8c85,kerosene,change,1.565,1.549
 2026-10-10,be850363d55b:kerosene,be850363d55b,kerosene,change,1.579,1.569
 2026-10-10,bb62751b98a5:kerosene,bb62751b98a5,kerosene,change,1.548,1.565
+2026-10-11,77450002346a:unleaded95,77450002346a,unleaded95,change,1.758,1.748
+2026-10-11,d825945d0dc1:unleaded95,d825945d0dc1,unleaded95,change,1.719,1.721
+2026-10-11,bcfe91ea09aa:unleaded95,bcfe91ea09aa,unleaded95,change,1.719,1.721
+2026-10-11,ed2f040407db:unleaded98,ed2f040407db,unleaded98,change,1.784,1.771
+2026-10-11,77450002346a:unleaded98,77450002346a,unleaded98,change,1.789,1.775
+2026-10-11,d825945d0dc1:unleaded98,d825945d0dc1,unleaded98,change,1.760,1.762
+2026-10-11,bcfe91ea09aa:unleaded98,bcfe91ea09aa,unleaded98,change,1.760,1.762
+2026-10-11,122aa6b021d2:unleaded98,122aa6b021d2,unleaded98,change,1.785,1.817
+2026-10-11,d825945d0dc1:diesel,d825945d0dc1,diesel,change,1.994,1.996
+2026-10-11,bcfe91ea09aa:diesel,bcfe91ea09aa,diesel,change,1.994,1.996
