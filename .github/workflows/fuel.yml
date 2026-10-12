@@ -2,7 +2,12 @@ name: fuel
 
 on:
   schedule:
-    - cron: "15 4 * * *"   # 04:15 UTC = 07:15 Cyprus; separate from the grocery run so a slow observatory never blocks it
+    # Three attempts a day; the collector exits immediately once the day has a successful
+    # run, so the later attempts only do work when the observatory was down in the morning
+    # (it was unreachable on 7 of the first 30 days). GitHub's cron can start hours late.
+    - cron: "15 4 * * *"    # 07:15 Cyprus
+    - cron: "15 10 * * *"   # 13:15 Cyprus
+    - cron: "15 16 * * *"   # 19:15 Cyprus
   workflow_dispatch:
 
 concurrency:

@@ -90,7 +90,8 @@ def get_token(op) -> str:
     page = fetch(op, FORM)
     m = re.search(r'name="__RequestVerificationToken"[^>]*value="([^"]+)"', page)
     if not m:
-        raise RuntimeError("no anti-forgery token on form page")
+        glimpse = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", page))[:200]
+        raise RuntimeError(f"no anti-forgery token on form page; server returned: {glimpse!r}")
     return m.group(1)
 
 
@@ -165,11 +166,27 @@ def upsert_rows(path, rows, fields, keys):
     write_csv(path, kept + rows, fields)
 
 
-def run(public_dir: str, date: str, dry_run: bool) -> int:
+RUN_FIELDS = ["date", "requests", "stations", "observations", "new", "changed", "delisted", "relisted", "seconds", "ok", "error"]
+
+
+def already_collected(fdir: str, date: str) -> bool:
+    return any(r.get("date") == date and r.get("ok") == "1" for r in read_csv(os.path.join(fdir, "runs.csv")))
+
+
+def run(public_dir: str, date: str, dry_run: bool, force: bool = False) -> int:
     t0 = time.time()
     fdir = os.path.join(public_dir, "fuel")
-    op = opener()
-    token = get_token(op)
+    if not force and already_collected(fdir, date):
+        print(f"[{date}] already collected today; nothing to do (use --force to re-collect)", flush=True)
+        return 0
+    try:
+        op = opener()
+        token = get_token(op)
+    except Exception as e:  # noqa: BLE001
+        print(f"[{date}] ERROR observatory unreachable: {e}", file=sys.stderr, flush=True)
+        if not dry_run:
+            append_csv(os.path.join(fdir, "runs.csv"), [{"date": date, "requests": 1, "seconds": f"{time.time() - t0:.0f}", "ok": 0, "error": str(e)[:200]}], RUN_FIELDS)
+        return 2
 
     observations: dict[str, dict] = {}   # key -> row
     stations: dict[str, dict] = {}
@@ -248,11 +265,11 @@ def run(public_dir: str, date: str, dry_run: bool) -> int:
 
     run_row = {"date": date, "requests": requests_made, "stations": len(stations), "observations": len([r for r in observations.values() if not r.get('delisted_on')]),
                "new": n_new, "changed": n_changed, "delisted": n_delisted, "relisted": n_relisted,
-               "seconds": f"{time.time() - t0:.0f}", "ok": int(ok)}
+               "seconds": f"{time.time() - t0:.0f}", "ok": int(ok), "error": "" if ok else f"{len(failed)} of {len(jobs)} queries failed"}
     print(run_row, flush=True)
     if dry_run:
         return 0 if ok else 2
-    append_csv(os.path.join(fdir, "runs.csv"), [run_row], list(run_row.keys()))
+    append_csv(os.path.join(fdir, "runs.csv"), [run_row], RUN_FIELDS)
     if not ok:
         return 2
 
@@ -274,8 +291,9 @@ def main() -> int:
     ap.add_argument("--public-dir", required=True)
     ap.add_argument("--date", default=dt.datetime.now(TZ).date().isoformat())
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--force", action="store_true", help="re-collect even if today already has a successful run")
     a = ap.parse_args()
-    return run(a.public_dir, a.date, a.dry_run)
+    return run(a.public_dir, a.date, a.dry_run, a.force)
 
 
 if __name__ == "__main__":

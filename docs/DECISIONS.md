@@ -29,3 +29,7 @@ The site is a general **Cyprus Price Index**, not a grocery-only page. Groceries
 Source: the Consumer Protection Service's Retail Fuel Price Observatory, an ASP.NET form at `eforms.eservices.cyprus.gov.cy/MCIT/MCIT/PetroleumPrices`, posted per fuel type × district with the page's anti-forgery token. 25 queries a day cover every station (317 on day one; 1,526 station × fuel prices). The server takes ~12 s per query. Station coordinates come from the map links. There is no station id, so stations are keyed by a hash of brand, name, address, area and district.
 
 Published measure: the **national median price per litre** per fuel, daily, with monthly averages as the headline; district medians and brand medians alongside. Median rather than mean because station prices are bounded and skewed by a few outliers. All fuel data is public in this repo: it is government open data, so the private-repo treatment used for the retailer catalogue does not apply.
+
+## Fuel reliability (12 October 2026)
+
+In the first 30 days the observatory was unreachable at collection time on 7 days (timeouts, or a form page without the anti-forgery token). Those days are gaps; prices cannot be backfilled. Mitigation: the fuel workflow now runs three times a day and the collector exits immediately once the day has a successful run, so extra attempts cost nothing. Failures are now recorded in `data/fuel/runs.csv` with an `error` column instead of only as a red workflow.
