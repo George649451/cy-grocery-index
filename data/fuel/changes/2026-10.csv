@@ -2728,3 +2728,14 @@ date,key,station_id,fuel,event,price,prev_price
 2026-10-19,772be93750d2:kerosene,772be93750d2,kerosene,change,1.519,1.529
 2026-10-19,ba65517bf3ed:kerosene,ba65517bf3ed,kerosene,change,1.520,1.530
 2026-10-19,bcfe91ea09aa:kerosene,bcfe91ea09aa,kerosene,change,1.519,1.547
+2026-10-20,772be93750d2:unleaded95,772be93750d2,unleaded95,change,1.721,1.709
+2026-10-20,2d1dc84554ad:unleaded95,2d1dc84554ad,unleaded95,change,1.729,1.737
+2026-10-20,772be93750d2:unleaded98,772be93750d2,unleaded98,change,1.821,1.739
+2026-10-20,2d1dc84554ad:unleaded98,2d1dc84554ad,unleaded98,change,1.749,1.757
+2026-10-20,772be93750d2:diesel,772be93750d2,diesel,change,1.992,1.979
+2026-10-20,7b205bef86bd:diesel,7b205bef86bd,diesel,change,1.976,1.998
+2026-10-20,772be93750d2:heating_oil,772be93750d2,heating_oil,change,1.649,1.639
+2026-10-20,cc747759de94:heating_oil,cc747759de94,heating_oil,change,1.639,1.669
+2026-10-20,0708c47ecb63:heating_oil,0708c47ecb63,heating_oil,change,1.639,1.669
+2026-10-20,772be93750d2:kerosene,772be93750d2,kerosene,change,1.547,1.519
+2026-10-20,d825945d0dc1:kerosene,d825945d0dc1,kerosene,change,1.519,1.547
