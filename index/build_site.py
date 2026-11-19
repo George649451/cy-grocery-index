@@ -32,6 +32,52 @@ FUEL_ORDER = ["unleaded95", "diesel", "unleaded98", "heating_oil", "kerosene"]
 DISTRICT_ORDER = ["Nicosia", "Limassol", "Larnaca", "Paphos", "Famagusta"]
 
 
+EC_FUELS = ["unleaded95", "diesel", "heating_oil"]
+
+
+def build_fuel_ec(public_dir, station_daily):
+    """Weekly national averages from the EC Oil Bulletin: the fuel module's ongoing series."""
+    path = os.path.join(public_dir, "fuel", "ec_weekly.csv")
+    if not os.path.exists(path):
+        return None
+    rows = [r for r in read(path) if r["unleaded95"] and r["diesel"]]
+    if not rows:
+        return None
+    wk = [{"date": r["date"], **{f: fnum(r[f]) if r[f] else None for f in EC_FUELS}} for r in rows]
+    latest = wk[-1]
+
+    def at_or_before(date):
+        prior = [w for w in wk if w["date"] <= date]
+        return prior[-1] if prior else None
+
+    def shift(date, days):
+        return (dt.date.fromisoformat(date) - dt.timedelta(days=days)).isoformat()
+
+    prev_week = wk[-2] if len(wk) > 1 else None
+    year_ago = at_or_before(shift(latest["date"], 364))
+    by_m = defaultdict(list)
+    for w in wk:
+        by_m[w["date"][:7]].append(w)
+    this_month = dt.date.today().isoformat()[:7]
+    monthly = []
+    for m in sorted(by_m)[-14:]:
+        rec = {"month": m, "weeks": len(by_m[m]), "complete": m < this_month}
+        for f in EC_FUELS:
+            vals = [w[f] for w in by_m[m] if w[f] is not None]
+            rec[f] = round(statistics.mean(vals), 3) if vals else None
+        monthly.append(rec)
+    # agreement with our own station-level collection on the Mondays where both exist
+    st = {(r["date"], r["fuel"]): fnum(r["mean"]) for r in station_daily if r["district"] == "Cyprus"}
+    diffs = [abs(w["unleaded95"] - st[(w["date"], "unleaded95")]) for w in wk if (w["date"], "unleaded95") in st]
+    return {
+        "latest": latest, "prev_week": prev_week, "year_ago": year_ago,
+        "first_week": wk[0]["date"], "weeks": len(wk),
+        "series": wk[-105:],
+        "monthly": monthly,
+        "overlap": {"mondays": len(diffs), "mean_abs_diff_u95": round(statistics.mean(diffs), 4) if diffs else None},
+    }
+
+
 def build_fuel(public_dir):
     path = os.path.join(public_dir, "fuel", "daily.csv")
     if not os.path.exists(path):
@@ -77,6 +123,7 @@ def build_fuel(public_dir):
                                "diesel": round(statistics.median(fuels["diesel"]), 3) if fuels.get("diesel") else None})
         brands.sort(key=lambda x: (x["unleaded95"] is None, x["unleaded95"] or 0))
     return {
+        "ec": build_fuel_ec(public_dir, daily),
         "start": dates[0], "latest": latest, "collection_days": len(dates),
         "names": FUEL_NAMES, "order": FUEL_ORDER,
         "national": {f: {"median": fnum(nat[f]["median"]), "mean": fnum(nat[f]["mean"]), "min": fnum(nat[f]["min"]), "max": fnum(nat[f]["max"]), "n": int(nat[f]["n"]),

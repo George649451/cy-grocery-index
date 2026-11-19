@@ -87,27 +87,31 @@
   function renderFuel(f) {
     const L = f.names, order = f.order;
     const eurL = v => v == null ? '—' : '€' + v.toFixed(3);
+    const dv = (v, ref) => v == null ? '—' : (v - ref >= 0 ? '+' : '−') + Math.abs(v - ref).toFixed(3);
+    const fc = v => v == null || Math.abs(v) < 0.0005 ? 'flat' : v > 0 ? 'up' : 'down';
     const fm = d.modules.find(m => m.key === 'fuel') || {};
-    const paused = fm.status === 'paused';
-    const asOf = paused ? ` · ${fmtShort(f.latest)}` : '';
-    el('fuel-meta').textContent = paused
-      ? `Paused. Collected from every station on ${f.collection_days} days between ${fmtDate(f.start)} and ${fmtDate(f.latest)}. ${fm.note || ''} Figures below are as of the last collected day.`
-      : `Live since ${fmtDate(f.start)}. ${f.stations} stations reporting to the government observatory; every station, every day.`;
-    const main = ['unleaded95', 'diesel', 'heating_oil'];
-    el('fuel-stats').innerHTML = main.map(k => { const n = f.national[k]; if (!n) return ''; return `<div class="stat"><p class="label">${L[k]} · national median${asOf}</p><p class="value">${eurL(n.median)}<span class="delta"> /L</span></p><p class="sub">${n.n} stations · cheapest ${eurL(n.min)} · dearest ${eurL(n.max)}</p></div>`; }).join('')
-      + `<div class="stat"><p class="label">Spread · unleaded 95${asOf}</p><p class="value">${eurL(f.national.unleaded95.max - f.national.unleaded95.min).replace('€','')}<span class="delta"> €/L</span></p><p class="sub">between the dearest and cheapest station in Cyprus that day</p></div>`;
-    drawMulti(el('fuel-chart'), [
-      { key: 'unleaded95', label: L.unleaded95, cls: 's1', pts: f.series.unleaded95.map(p => ({ date: p.date, v: p.median })) },
-      { key: 'diesel', label: L.diesel, cls: 's2', pts: f.series.diesel.map(p => ({ date: p.date, v: p.median })) },
-    ]);
-    // monthly table
-    const months = [...new Set(order.flatMap(k => f.monthly[k].map(m => m.month)))].sort();
-    el('fuel-monthly').querySelector('tbody').innerHTML = months.map(m => {
-      const cell = k => { const r = f.monthly[k].find(x => x.month === m); return r ? eurL(r.median) : '—'; };
-      const days = (f.monthly.unleaded95.find(x => x.month === m) || {}).days ?? '';
-      const complete = (f.monthly.unleaded95.find(x => x.month === m) || {}).complete;
-      return `<tr><td>${fmtMonth(m)}${complete ? '' : ' <span class="chip">in progress</span>'}</td>${['unleaded95','diesel','unleaded98','heating_oil','kerosene'].map(k => `<td class="num">${cell(k)}</td>`).join('')}<td class="num">${days}</td></tr>`;
-    }).join('');
+    const e = f.ec;
+    const pct = (now, then) => (now == null || then == null) ? null : 100 * (now / then - 1);
+    const sgn = v => v == null ? '—' : (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(1) + '%';
+    if (e) {
+      el('fuel-meta').textContent = `National average prices from the European Commission's Weekly Oil Bulletin, ${e.weeks.toLocaleString('en-GB')} weeks back to ${new Date(e.first_week + 'T00:00:00').getFullYear()}. Latest week: ${fmtDate(e.latest.date)}. Per-station prices were collected daily from ${fmtShort(f.start)} to ${fmtShort(f.latest)}, until the government observatory moved behind a CAPTCHA; on the ${e.overlap.mondays} Mondays both sources cover, they agree to within ${(e.overlap.mean_abs_diff_u95 * 100).toFixed(1)} cent on average.`;
+      const tiles = [['unleaded95', L.unleaded95], ['diesel', L.diesel], ['heating_oil', L.heating_oil]];
+      el('fuel-stats').innerHTML = tiles.map(([k, name]) => {
+        const wk = pct(e.latest[k], e.prev_week && e.prev_week[k]), yr = pct(e.latest[k], e.year_ago && e.year_ago[k]);
+        return `<div class="stat"><p class="label">${name} · week of ${fmtShort(e.latest.date)}</p><p class="value">${eurL(e.latest[k])}<span class="delta"> /L</span></p><p class="sub"><span class="${fc(wk)}">${sgn(wk)}</span> on the week before · <span class="${fc(yr)}">${sgn(yr)}</span> on a year ago</p></div>`;
+      }).join('') + `<div class="stat"><p class="label">Diesel premium over unleaded 95</p><p class="value">${(e.latest.diesel - e.latest.unleaded95).toFixed(3)}<span class="delta"> €/L</span></p><p class="sub">a year ago it was ${e.year_ago ? (e.year_ago.diesel - e.year_ago.unleaded95).toFixed(3) : '—'} €/L</p></div>`;
+      const yearSeries = e.series.slice(-53);
+      drawMulti(el('fuel-chart'), [
+        { key: 'unleaded95', label: L.unleaded95, cls: 's1', pts: yearSeries.filter(p => p.unleaded95 != null).map(p => ({ date: p.date, v: p.unleaded95 })) },
+        { key: 'diesel', label: L.diesel, cls: 's2', pts: yearSeries.filter(p => p.diesel != null).map(p => ({ date: p.date, v: p.diesel })) },
+      ]);
+      el('fuel-monthly').querySelector('tbody').innerHTML = e.monthly.slice(-13).map((m, i, arr) => {
+        const prev = arr[i - 1]; const ch = prev ? pct(m.unleaded95, prev.unleaded95) : null;
+        return `<tr><td>${fmtMonth(m.month)}${m.complete ? '' : ' <span class="chip">in progress</span>'}</td><td class="num">${eurL(m.unleaded95)}</td><td class="num">${eurL(m.diesel)}</td><td class="num">${eurL(m.heating_oil)}</td><td class="num ${fc(ch)}">${sgn(ch)}</td><td class="num">${m.weeks}</td></tr>`;
+      }).reverse().join('');
+      el('fuel-district-p').textContent = `Station snapshot from ${fmtDate(f.latest)}, the last day per-station prices could be collected. Median price, with the cheapest and dearest station in each district.`;
+      el('fuel-brand-p').textContent = `Station snapshot from ${fmtDate(f.latest)}. Median across each brand's stations. Brands with fewer than three stations are left out.`;
+    }
     // districts
     el('fuel-districts').querySelector('tbody').innerHTML = f.districts.map(r => {
       const c = k => r[k] ? `${eurL(r[k].median)}<span class="delta"> ${eurL(r[k].min).replace('€','')}–${eurL(r[k].max).replace('€','')}</span>` : '—';
@@ -115,8 +119,6 @@
     }).join('');
     // brands
     const n95 = f.national.unleaded95.median, nd = f.national.diesel.median;
-    const dv = (v, ref) => v == null ? '—' : (v - ref >= 0 ? '+' : '−') + Math.abs(v - ref).toFixed(3);
-    const fc = v => v == null || Math.abs(v) < 0.0005 ? 'flat' : v > 0 ? 'up' : 'down';
     el('fuel-brands').querySelector('tbody').innerHTML = f.brands.map(b => `<tr><td>${esc(b.brand)}</td><td class="num">${b.n}</td><td class="num">${eurL(b.unleaded95)}</td><td class="num ${fc(b.unleaded95 - n95)}">${dv(b.unleaded95, n95)}</td><td class="num">${eurL(b.diesel)}</td><td class="num ${fc(b.diesel == null ? null : b.diesel - nd)}">${dv(b.diesel, nd)}</td></tr>`).join('');
   }
 
@@ -137,7 +139,7 @@
     svg += yt.map(v => `<line class="grid" x1="${m.l}" x2="${W - m.r}" y1="${Y(v)}" y2="${Y(v)}"/><text class="axis" x="${m.l - 8}" y="${Y(v) + 4}" text-anchor="end">€${v.toFixed(2)}</text>`).join('');
     const mt = []; const d0 = new Date(x0); d0.setDate(1); for (let dd = new Date(d0); dd.getTime() <= x1; dd.setMonth(dd.getMonth() + 1)) if (dd.getTime() >= x0 + 3 * 864e5) mt.push(dd.getTime());
     svg += mt.map(t => `<text class="axis" x="${X(t)}" y="${H - 12}" text-anchor="middle">${new Date(t).toLocaleDateString('en-GB', { month: 'short', year: '2-digit' })}</text>`).join('');
-    if (!mt.length || mt[0] - x0 > 3 * 864e5) svg += `<text class="axis" x="${X(x0)}" y="${H - 12}" text-anchor="start">${new Date(x0).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</text>`;
+    if (!mt.length || X(mt[0]) - X(x0) > 70) svg += `<text class="axis" x="${X(x0)}" y="${H - 12}" text-anchor="start">${new Date(x0).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</text>`;
     seriesList.forEach(s => {
       const T = s.pts.map(p => new Date(p.date + 'T00:00:00').getTime());
       const path = s.pts.map((p, i) => `${i ? 'L' : 'M'}${X(T[i]).toFixed(1)},${Y(p.v).toFixed(1)}`).join(' ');
