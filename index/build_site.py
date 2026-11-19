@@ -6,7 +6,9 @@ the numbers are reproducible from the committed CSVs.
 """
 import argparse
 import csv
+import datetime as dt
 import json
+import math
 import os
 import statistics
 import sys
@@ -48,7 +50,7 @@ def build_fuel(public_dir):
         by_m = defaultdict(list)
         for pt in series[f]:
             by_m[pt["date"][:7]].append(pt["median"])
-        monthly[f] = [{"month": m, "median": round(statistics.mean(v), 3), "days": len(v), "complete": m < latest[:7]} for m, v in sorted(by_m.items())]
+        monthly[f] = [{"month": m, "median": round(statistics.mean(v), 3), "days": len(v), "complete": m < max(latest[:7], dt.date.today().isoformat()[:7])} for m, v in sorted(by_m.items())]
     districts = []
     for d in DISTRICT_ORDER:
         row = {"district": d}
@@ -103,22 +105,73 @@ def main() -> int:
     for r in panel:
         by_date[r["date"]][r["id"]] = r
 
-    # weekly basket cost per collection date (promotional/paid price); items missing on a date are
-    # imputed at their last known unit price so the series never drops because of a stock-out
-    series = []
-    last_unit = {}
+    # Weekly basket cost per collection date (paid price). A line with no price on a date
+    # (delisted or absent) is imputed: its last observed unit price moved by the Jevons
+    # movement, since that observation, of the lines in its group that are priced on both
+    # dates. Never the last price carried forward. Falls back to the whole basket when the
+    # group has no other priced line.
+    group_of = {b["id"]: b["group"] for b in basket}
+    observed = {}                      # date -> {id: unit price actually observed}
     for d in dates:
-        total = 0.0
-        priced = 0
+        obs = {}
         for b in basket:
             row = by_date[d].get(b["id"])
-            uv = fnum(row["unit_value"]) if row and row["unit_value"] else None
-            if uv is not None and not (row and row.get("delisted")):
-                last_unit[b["id"]] = uv
+            if row and row["unit_value"] and not row.get("delisted"):
+                obs[b["id"]] = fnum(row["unit_value"])
+        observed[d] = obs
+
+    # Source-error guard. The retailer's unit price occasionally glitches (20 Oct 2026: a
+    # 1.5 L cola at an unchanged EUR 1.95 was listed at 13/L instead of 1.30/L for one day).
+    # The pack size implied by price / unit price cannot plausibly halve or double overnight,
+    # so such an observation is set aside and the line is imputed for that day - unless the
+    # new implied size is still there two observations later, in which case it is a genuine
+    # pack change and is accepted.
+    anomalies = []
+    for b in basket:
+        i = b["id"]
+        seq = []
+        for d in dates:
+            row = by_date[d].get(i)
+            if i in observed[d] and row and fnum(row["price"]) and observed[d][i] > 0:
+                seq.append((d, fnum(row["price"]) / observed[d][i]))
+        accepted = None
+        for k, (d, size) in enumerate(seq):
+            if accepted is None or 0.5 <= size / accepted <= 2:
+                accepted = size
+                continue
+            ahead = [sz for _, sz in seq[k + 1:k + 3]]
+            persists = len(ahead) == 2 and all(0.5 <= sz / size <= 2 for sz in ahead)
+            if persists:
+                accepted = size
+            else:
+                anomalies.append({"date": d, "id": i, "title": b["title"], "unit_price_listed": observed[d][i],
+                                  "implied_pack": round(size, 4), "usual_pack": round(accepted, 4)})
+                del observed[d][i]
+
+    def movement(ids, d_from, d_to):
+        rel = [math.log(observed[d_to][i] / observed[d_from][i]) for i in ids
+               if i in observed[d_from] and i in observed[d_to] and observed[d_from][i] > 0]
+        return math.exp(sum(rel) / len(rel)) if rel else None
+
+    series = []
+    last_obs = {}                      # id -> (date, unit price)
+    unit_on = {}                       # date -> {id: (unit price, imputed?)}
+    for d in dates:
+        total, priced, cur = 0.0, 0, {}
+        for b in basket:
+            i = b["id"]
+            if i in observed[d]:
+                last_obs[i] = (d, observed[d][i])
+                cur[i] = (observed[d][i], False)
                 priced += 1
-            uv = last_unit.get(b["id"])
-            if uv is not None:
-                total += uv * float(b["weekly_qty"])
+            elif i in last_obs:
+                d0, p0 = last_obs[i]
+                peers = [j for j in group_of if group_of[j] == group_of[i] and j != i]
+                mv = movement(peers, d0, d) or movement([j for j in group_of if j != i], d0, d) or 1.0
+                cur[i] = (p0 * mv, True)
+            if i in cur:
+                total += cur[i][0] * float(b["weekly_qty"])
+        unit_on[d] = cur
         series.append({"date": d, "cost": round(total, 2), "priced": priced})
 
     # monthly readings: mean of the daily basket cost within each calendar month; a month
@@ -141,17 +194,20 @@ def main() -> int:
     for b in basket:
         r = latest_rows.get(b["id"])
         s0 = start_rows.get(b["id"])
-        uv = fnum(r["unit_value"]) if r else None
+        cur = unit_on[latest].get(b["id"])
+        uv = round(cur[0], 4) if cur else None
+        imputed = bool(cur and cur[1])
         uv0 = fnum(s0["unit_value"]) if s0 else None
         m = master.get(b["id"], {})
         items.append({
             "id": b["id"], "group": b["group"], "title": b["title"], "brand": b["brand"],
             "qty": float(b["weekly_qty"]), "basis": b["basis"], "note": b["note"],
-            "unit_price": uv, "unit_price_start": uv0,
+            "unit_price": uv, "unit_price_start": uv0, "imputed": imputed,
+            "last_observed": last_obs.get(b["id"], (None, None))[0],
             "weekly_cost": round(uv * float(b["weekly_qty"]), 2) if uv is not None else None,
-            "pack_price": fnum(r["price"]) if r else None,
-            "original_price": fnum(r["original_price"]) if r else None,
-            "promotion": r["promotion"] if r else "",
+            "pack_price": fnum(r["price"]) if r and not imputed else None,
+            "original_price": fnum(r["original_price"]) if r and not imputed else None,
+            "promotion": r["promotion"] if r and not imputed else "",
             "unit_price_source": b["unit_price_source"],
             "image": m.get("image_url", ""),
             "url": f"https://www.alphamega.com.cy/en/groceries?productId={b['id']}",
@@ -189,6 +245,7 @@ def main() -> int:
     out = {
         "modules": modules,
         "fuel": fuel,
+        "anomalies": anomalies,
         "generated_from": {"start": start, "latest": latest, "collection_days": len(dates)},
         "basket": {
             "household": "two adults, two school-age children",

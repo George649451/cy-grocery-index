@@ -11,7 +11,7 @@
   // coverage row and planned modules
   const fmtShort = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
   el('coverage').innerHTML = d.modules.map(m => `<div class="cov"><div class="name">${esc(m.name)}<span class="tag ${m.status}">${m.status}</span></div><div class="src">${m.status === 'live' ? 'Since ' + fmtShort(m.started) + ' · ' : ''}${esc(m.source)}</div></div>`).join('');
-  el('coming-list').innerHTML = d.modules.filter(m => m.status !== 'live').map((m, i) => `<div class="row"><span class="name">${esc(m.name)}</span><span class="src">${esc(m.source)}</span><span class="note">${esc(m.note)}</span><span class="st"><span class="tag ${m.status}">${m.status}</span></span></div>`).join('');
+  el('coming-list').innerHTML = d.modules.filter(m => m.status === 'planned').map((m, i) => `<div class="row"><span class="name">${esc(m.name)}</span><span class="src">${esc(m.source)}</span><span class="note">${esc(m.note)}</span><span class="st"><span class="tag ${m.status}">${m.status}</span></span></div>`).join('');
   const groc = d.modules.find(m => m.key === 'groceries');
   el('groceries-meta').textContent = `Live since ${fmtShort(groc?.started || g.start)}. ${esc(groc?.note || '')}`;
 
@@ -61,7 +61,7 @@
   el('groups').innerHTML = b.groups.map(x => `<div class="bar-row"><span class="bar-name">${x.group}</span><div class="bar-track"><div class="bar" style="width:${(100 * x.cost / gmax).toFixed(1)}%"></div></div><span class="bar-val">${eur(x.cost)}</span></div>`).join('');
 
   // items
-  el('items-intro').textContent = `Weekly quantities are fixed; only prices move. Unit prices are Alphamega's own per-kg / per-litre figures except where marked †, which are derived from the pack size in the product name.`;
+  el('items-intro').textContent = `Weekly quantities are fixed; only prices move. A line that is not on sale is marked Imputed: its last price is moved in step with the rest of its group, never frozen. Unit prices are Alphamega's own per-kg / per-litre figures except where marked †, which are derived from the pack size in the product name.`;
   const tb = el('items-table').querySelector('tbody');
   let lastGroup = null;
   b.items.forEach(it => {
@@ -77,7 +77,7 @@
       <td class="num">${fmtQty(it.qty)} ${it.basis}</td>
       <td class="num">${eur(it.unit_price)}/${it.basis}${it.unit_price_source === 'title' ? '†' : ''}</td>
       <td class="num">${eur(it.weekly_cost)}</td>
-      <td>${it.promotion ? `<span class="chip">${esc(it.promotion)}</span>` : ''}</td>
+      <td>${it.imputed ? `<span class="chip" title="Not on sale since ${it.last_observed}; price imputed from the movement of its group">Imputed</span>` : it.promotion ? `<span class="chip">${esc(it.promotion)}</span>` : ''}</td>
       <td class="num ${cls(chg)}">${chg == null ? '—' : Math.abs(chg) < 0.05 ? '·' : (chg > 0 ? '▲ ' : '▼ ') + Math.abs(chg).toFixed(1) + '%'}</td>`;
     tb.appendChild(tr);
   });
@@ -87,10 +87,15 @@
   function renderFuel(f) {
     const L = f.names, order = f.order;
     const eurL = v => v == null ? '—' : '€' + v.toFixed(3);
-    el('fuel-meta').textContent = `Live since ${fmtDate(f.start)}. ${f.stations} stations reporting to the government observatory; every station, every day.`;
+    const fm = d.modules.find(m => m.key === 'fuel') || {};
+    const paused = fm.status === 'paused';
+    const asOf = paused ? ` · ${fmtShort(f.latest)}` : '';
+    el('fuel-meta').textContent = paused
+      ? `Paused. Collected from every station on ${f.collection_days} days between ${fmtDate(f.start)} and ${fmtDate(f.latest)}. ${fm.note || ''} Figures below are as of the last collected day.`
+      : `Live since ${fmtDate(f.start)}. ${f.stations} stations reporting to the government observatory; every station, every day.`;
     const main = ['unleaded95', 'diesel', 'heating_oil'];
-    el('fuel-stats').innerHTML = main.map(k => { const n = f.national[k]; if (!n) return ''; return `<div class="stat"><p class="label">${L[k]} · national median</p><p class="value">${eurL(n.median)}<span class="delta"> /L</span></p><p class="sub">${n.n} stations · cheapest ${eurL(n.min)} · dearest ${eurL(n.max)}</p></div>`; }).join('')
-      + `<div class="stat"><p class="label">Spread · unleaded 95</p><p class="value">${eurL(f.national.unleaded95.max - f.national.unleaded95.min).replace('€','')}<span class="delta"> €/L</span></p><p class="sub">between the dearest and cheapest station in Cyprus today</p></div>`;
+    el('fuel-stats').innerHTML = main.map(k => { const n = f.national[k]; if (!n) return ''; return `<div class="stat"><p class="label">${L[k]} · national median${asOf}</p><p class="value">${eurL(n.median)}<span class="delta"> /L</span></p><p class="sub">${n.n} stations · cheapest ${eurL(n.min)} · dearest ${eurL(n.max)}</p></div>`; }).join('')
+      + `<div class="stat"><p class="label">Spread · unleaded 95${asOf}</p><p class="value">${eurL(f.national.unleaded95.max - f.national.unleaded95.min).replace('€','')}<span class="delta"> €/L</span></p><p class="sub">between the dearest and cheapest station in Cyprus that day</p></div>`;
     drawMulti(el('fuel-chart'), [
       { key: 'unleaded95', label: L.unleaded95, cls: 's1', pts: f.series.unleaded95.map(p => ({ date: p.date, v: p.median })) },
       { key: 'diesel', label: L.diesel, cls: 's2', pts: f.series.diesel.map(p => ({ date: p.date, v: p.median })) },

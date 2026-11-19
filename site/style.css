@@ -131,6 +131,7 @@ footer { display: flex; justify-content: space-between; gap: 24px; flex-wrap: wr
 .tag { display: inline-block; font-size: 10px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; padding: 2px 7px; border: 1px solid var(--rule-2); }
 .tag.live { background: var(--ink); color: var(--bg); border-color: var(--ink); }
 .tag.planned { color: var(--ink-3); border-color: var(--rule); }
+.tag.paused { color: var(--critical); border-color: var(--critical); }
 @media (max-width: 860px) { .coverage { grid-template-columns: 1fr; } .cov { border-left: 0; padding-left: 0; border-top: 1px solid var(--rule); } .cov:first-child { border-top: 0; } }
 
 /* module headers */
