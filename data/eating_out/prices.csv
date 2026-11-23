@@ -6,6 +6,8 @@ date,item_id,price
 2026-11-23,coffee-island:espresso,1.80
 2026-11-23,coffee-island:freddo-cappuccino,3.10
 2026-11-23,coffee-island:freddo-espresso,2.80
+2026-11-23,comfy:freddo-espresso,5.00
+2026-11-23,comfy:iced-latte,5.50
 2026-11-23,creamys:cappuccino,3.30
 2026-11-23,creamys:cyprus-coffee,2.00
 2026-11-23,creamys:freddo-espresso,2.90
@@ -67,6 +69,11 @@ date,item_id,price
 2026-11-23,sterna:souvlaki-pitta,5.50
 2026-11-23,sterna:souvlaki-portion,10.00
 2026-11-23,sterna:village-salad,3.50
+2026-11-23,syrian-restaurant:falafel,2.40
+2026-11-23,syrian-restaurant:full-meze,24.00
+2026-11-23,syrian-restaurant:hummus,2.50
+2026-11-23,syrian-restaurant:kebab,8.50
+2026-11-23,syrian-restaurant:mixed-grill,12.00
 2026-11-23,tsitsis:beer-33cl,2.50
 2026-11-23,tsitsis:kebab-pitta,7.00
 2026-11-23,tsitsis:mix-pitta,7.00

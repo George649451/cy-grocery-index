@@ -39,11 +39,11 @@ ANOMALY_FIELDS = ["date", "item_id", "price_listed", "previous_price"]
 RUN_FIELDS = ["date", "items", "found", "missing", "pages_failed", "changed", "ok", "detail"]
 
 
-def fetch(url: str, retries: int = 3) -> bytes:
+def fetch(url: str, retries: int = 2) -> bytes:
     last = None
     for attempt in range(retries):
         try:
-            with urlopen(Request(quote(url, safe=":/?&=%#+,;@()!*'~$-._"), headers={"User-Agent": USER_AGENT}), timeout=120) as r:
+            with urlopen(Request(quote(url, safe=":/?&=%#+,;@()!*'~$-._"), headers={"User-Agent": USER_AGENT}), timeout=45) as r:
                 return r.read()
         except Exception as e:  # noqa: BLE001
             last = e
@@ -151,6 +151,12 @@ def run(public_dir: str, date: str, dry_run: bool) -> int:
             print(f"[{date}] CHANGE {it['item_id']}: {prev:.2f} -> {price:.2f}", flush=True)
         found.append({"date": date, "item_id": it["item_id"], "price": f"{price:.2f}"})
 
+    found_set = {r["item_id"] for r in found}
+    for key, text in pages.items():
+        its = [it for it in items if (it["url"], it.get("doc_link", "") or "") == key]
+        if its and not any(it["item_id"] in found_set for it in its):
+            print(f"[{date}] no items matched on {key[0]} ({len(text)} chars of text); it starts: {text[:160]!r}", file=sys.stderr, flush=True)
+
     ok = len(found) >= 0.6 * len(items)
     detail = ("missing: " + " ".join(missing)) if missing else ""
     run_row = {"date": date, "items": len(items), "found": len(found), "missing": len(missing),
@@ -167,7 +173,10 @@ def run(public_dir: str, date: str, dry_run: bool) -> int:
     write_csv(anomalies_path, read_csv(anomalies_path) + anomalies, ANOMALY_FIELDS)
     if not ok:
         return 2
-    kept = [r for r in history if r["date"] != date]          # a same-day rerun replaces that day's rows
+    # A same-day rerun updates the items it found and keeps the rest of that day's rows:
+    # a second run that hits a timeout must never erase what an earlier run read.
+    found_ids = {r["item_id"] for r in found}
+    kept = [r for r in history if not (r["date"] == date and r["item_id"] in found_ids)]
     write_csv(prices_path, sorted(kept + found, key=lambda r: (r["date"], r["item_id"])), PRICE_FIELDS)
     return 0
 
