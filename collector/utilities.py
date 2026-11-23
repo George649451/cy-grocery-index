@@ -423,7 +423,10 @@ def run(public_dir: str, date: str) -> int:
     if water:
         write_csv(water_path, sorted(water, key=lambda r: (r["district"], r["component"] != "fixed", r["component"],
                                                           float(r["from_m3"] or 0))), WATER_FIELDS)
-    append_csv(os.path.join(udir, "changes.csv"), changes, CHANGE_FIELDS)
+    changes_path = os.path.join(udir, "changes.csv")
+    if not os.path.exists(changes_path):
+        write_csv(changes_path, [], CHANGE_FIELDS)      # header only, so the published link always resolves
+    append_csv(changes_path, changes, CHANGE_FIELDS)
     append_csv(os.path.join(udir, "runs.csv"), runs, RUN_FIELDS)
     failed = [r["source"] for r in runs if not r["ok"]]
     print(f"[{date}] {len(runs) - len(failed)} of {len(runs)} sources ok, {len(changes)} changes" +
