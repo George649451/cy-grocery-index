@@ -27,6 +27,11 @@ jobs:
         run: |
           python index/build_site.py --public-dir data --out _site/data.json
           cp site/index.html site/style.css site/app.js _site/
+          # Version the script and stylesheet URLs so a browser never pairs a new page with a
+          # cached old script (which left a newly added section empty on 23 Nov 2026).
+          V=$(cat site/app.js site/style.css | sha1sum | cut -c1-10)
+          sed -i "s|src=\"app.js\"|src=\"app.js?v=$V\"|; s|href=\"style.css\"|href=\"style.css?v=$V\"|" _site/index.html
+          grep -q "app.js?v=$V" _site/index.html && grep -q "style.css?v=$V" _site/index.html
           mkdir -p _site/data && cp -R data/basket data/summary data/catalogue data/fuel data/utilities data/eating_out _site/data/
           touch _site/.nojekyll
       - uses: actions/upload-pages-artifact@v3
