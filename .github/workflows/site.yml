@@ -27,7 +27,7 @@ jobs:
         run: |
           python index/build_site.py --public-dir data --out _site/data.json
           cp site/index.html site/style.css site/app.js _site/
-          mkdir -p _site/data && cp -R data/basket data/summary data/catalogue data/fuel data/utilities _site/data/
+          mkdir -p _site/data && cp -R data/basket data/summary data/catalogue data/fuel data/utilities data/eating_out _site/data/
           touch _site/.nojekyll
       - uses: actions/upload-pages-artifact@v3
         with:

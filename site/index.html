@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cyprus Price Index</title>
-<meta name="description" content="An independent tracker of what everyday life costs in Cyprus: groceries now, fuel, transport, eating out and utilities to follow. Collected daily, published monthly, comparable to the official CPI.">
+<meta name="description" content="An independent tracker of what everyday life costs in Cyprus: groceries, fuel, utilities and eating out. Collected daily, published monthly, comparable to the official CPI.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -16,13 +16,13 @@
   <nav class="topbar">
     <span class="brand">Cyprus Price Index</span>
     <span class="topbar-mid">Independent · Collected daily · Published monthly</span>
-    <span class="topbar-links" id="topnav"><a href="#groceries">Groceries</a><a href="#fuel">Fuel</a><a href="#utilities">Utilities</a><a href="#coming">Coming</a><a href="#data">Data</a><a href="https://github.com/George649451/cy-grocery-index">GitHub</a></span>
+    <span class="topbar-links" id="topnav"><a href="#groceries">Groceries</a><a href="#fuel">Fuel</a><a href="#utilities">Utilities</a><a href="#eating-out">Eating out</a><a href="#coming">Coming</a><a href="#data">Data</a><a href="https://github.com/George649451/cy-grocery-index">GitHub</a></span>
   </nav>
 
   <header class="masthead">
     <h1>Cyprus<br>Price<br>Index</h1>
     <div class="masthead-side">
-      <p class="lede">What everyday life costs in Cyprus, measured properly. Fixed baskets, unit prices, and methods that line up with the official statistics closely enough to be compared with them. Groceries first; fuel, transport, eating out and utilities to follow.</p>
+      <p class="lede">What everyday life costs in Cyprus, measured properly. Fixed baskets, unit prices, and methods that line up with the official statistics closely enough to be compared with them. Groceries, fuel, utilities and eating out are live; transport is next.</p>
       <p class="status" id="status">Loading…</p>
     </div>
   </header>
@@ -161,8 +161,40 @@
     </div>
   </section>
 
+  <section class="module-head" id="eating-out">
+    <span class="n">Module 04</span>
+    <h2>Eating out</h2>
+    <p class="module-meta" id="eat-meta">—</p>
+  </section>
+
+  <section class="stats stats-fuel" id="eat-stats" aria-label="Eating out key figures"></section>
+
+  <section class="sec" aria-labelledby="eat-idx-h">
+    <div class="sec-label"><span class="n">04.1</span><h2 id="eat-idx-h">Menu price index</h2><p>The average movement of every item on the list since the first check, as a geometric mean. An item that drops off a menu is treated as moving with the rest, not as unchanged.</p></div>
+    <div class="sec-body">
+      <div class="table-scroll">
+      <table id="eat-idx-table" class="compact">
+        <thead><tr><th>Check</th><th class="num">Items priced</th><th class="num">Index</th><th class="num">vs previous check</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" aria-labelledby="eat-list-h">
+    <div class="sec-label"><span class="n">04.2</span><h2 id="eat-list-h">The menu list</h2><p>Each price is read from the restaurant's own published menu; the restaurant name links to it. The list is fixed for twelve months.</p></div>
+    <div class="sec-body">
+      <div class="table-scroll">
+      <table id="eat-table">
+        <thead><tr><th>Item</th><th>Kind</th><th class="num">Menu price</th><th class="num">Since start</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      </div>
+    </div>
+  </section>
+
   <section class="module-head" id="coming">
-    <span class="n">Modules 04–05</span>
+    <span class="n">Module 05</span>
     <h2>Coming next</h2>
     <p class="module-meta">Each module gets the same treatment: a fixed basket, a published method, raw data alongside. Nothing is shown until it has been collected for long enough to mean something.</p>
   </section>
@@ -191,6 +223,8 @@
       <h2>Data</h2>
       <p>Collected once a day from Alphamega's public online catalogue. Branch differences are stock, not price. Everything on this page is reproducible from the published files.</p>
       <ul class="links">
+        <li><a href="data/eating_out/items.csv">Eating-out item list</a><span>45 menu items, with sources</span></li>
+        <li><a href="data/eating_out/prices.csv">Eating-out prices</a><span>one row per item per check</span></li>
         <li><a href="data/utilities/eac_fuel_adjustment.csv">Electricity fuel adjustment</a><span>by billing month</span></li>
         <li><a href="data/utilities/eac_tariff.csv">Electricity tariff versions</a></li>
         <li><a href="data/utilities/water_tariffs.csv">Water tariffs</a><span>Limassol, Larnaca, Paralimni</span></li>

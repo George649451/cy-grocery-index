@@ -1,0 +1,46 @@
+item_id,restaurant,area,type,category,label,url,pattern,note,entered,active
+meze-taverna:pork-souvlaki,Meze Taverna,Old town,Cypriot taverna,main,Pork souvlaki,https://www.mezetaverna.com/menu,"Pork Souvlaki Pieces of pork[^€]{0,80}€{P}",,2026-11-23,1
+meze-taverna:sheftalia,Meze Taverna,Old town,Cypriot taverna,main,Sheftalia,https://www.mezetaverna.com/menu,"Sheftalia Homemade pork sausage[^€]{0,120}€{P}",,2026-11-23,1
+meze-taverna:kleftiko,Meze Taverna,Old town,Cypriot taverna,main,Kleftiko,https://www.mezetaverna.com/menu,"Kleftiko Tender piece of lamb[^€]{0,100}€{P}",,2026-11-23,1
+meze-taverna:moussaka,Meze Taverna,Old town,Cypriot taverna,main,Moussaka,https://www.mezetaverna.com/menu,"Mousakka Layers of potatoes, aubergines and a pork[^€]{0,120}€{P}",,2026-11-23,1
+meze-taverna:meat-meze,Meze Taverna,Old town,Cypriot taverna,meze,"Meat meze, per person",https://www.mezetaverna.com/menu,"MEAT MEZE \(minimum order 2 meze\)[^€]{0,1800}€{P}",minimum two,2026-11-23,1
+meze-taverna:village-salad,Meze Taverna,Old town,Cypriot taverna,starter,"Village salad, for one",https://www.mezetaverna.com/menu,"Village Salad Lettuce[^€]{0,160}1p €{P}",,2026-11-23,1
+meze-taverna:beer-33cl,Meze Taverna,Old town,Cypriot taverna,beer,"Keo, Leon or Carlsberg, 33cl",https://www.mezetaverna.com/menu,Keo or Leon or Carlsberg \(33cl\) €{P},,2026-11-23,1
+meze-taverna:cyprus-coffee,Meze Taverna,Old town,Cypriot taverna,coffee,Cyprus coffee,https://www.mezetaverna.com/menu,Cypriot Coffee €{P},,2026-11-23,1
+meze-taverna:water-05l,Meze Taverna,Old town,Cypriot taverna,soft,"Bottled water, 0.5 L",https://www.mezetaverna.com/menu,Small Bottle Water \(0\.5ltr\) €{P},,2026-11-23,1
+karatello-tavern:pork-souvlaki,Karatello Tavern,Carob Mill,Cypriot taverna,main,"Pork souvlaki in pitta, with chips",https://carobmill-restaurants.com/featured-item/karatello-tavern/menu/,Pork Souvlaki in Pitta €{P},,2026-11-23,1
+karatello-tavern:sheftalia,Karatello Tavern,Carob Mill,Cypriot taverna,main,Pork sheftalia,https://carobmill-restaurants.com/featured-item/karatello-tavern/menu/,Pork Sheftalia €{P},,2026-11-23,1
+karatello-tavern:kleftiko,Karatello Tavern,Carob Mill,Cypriot taverna,main,Lamb kleftiko,https://carobmill-restaurants.com/featured-item/karatello-tavern/menu/,Slow Cooked Lamb Kleftiko with Fresh potatoes €{P},,2026-11-23,1
+karatello-tavern:moussaka,Karatello Tavern,Carob Mill,Cypriot taverna,main,Moussaka,https://carobmill-restaurants.com/featured-item/karatello-tavern/menu/,Traditional Moussaka €{P},,2026-11-23,1
+karatello-tavern:meze,Karatello Tavern,Carob Mill,Cypriot taverna,meze,"Meze, per person",https://carobmill-restaurants.com/featured-item/karatello-tavern/menu/,Meze €{P} per person,,2026-11-23,1
+karatello-tavern:village-salad,Karatello Tavern,Carob Mill,Cypriot taverna,starter,"Greek village salad, small",https://carobmill-restaurants.com/featured-item/karatello-tavern/menu/,Greek Village Salad €{P} small portion,,2026-11-23,1
+karatello-tavern:keo-50cl,Karatello Tavern,Carob Mill,Cypriot taverna,beer,"Keo draught, 50cl",https://carobmill-restaurants.com/featured-item/karatello-tavern/menu/,Keo €[\d.]+ 25cl €{P} 50cl,,2026-11-23,1
+karatello-tavern:cyprus-coffee,Karatello Tavern,Carob Mill,Cypriot taverna,coffee,Cyprus coffee,https://carobmill-restaurants.com/featured-item/karatello-tavern/menu/,(?<!Double )Cyprus Coffee €{P},,2026-11-23,1
+artima-bistro:caesar-salad,Artima Bistro,Carob Mill,Mediterranean bistro,starter,Caesar salad,https://carobmill-restaurants.com/featured-item/artima-restaurant/menu/,Caesar Salad €{P},same operator as Karatello,2026-11-23,1
+artima-bistro:rib-eye,Artima Bistro,Carob Mill,Mediterranean bistro,main,"Rib eye, 350 g",https://carobmill-restaurants.com/featured-item/artima-restaurant/menu/,Rib Eye \(350gr\) €{P},same operator as Karatello,2026-11-23,1
+artima-bistro:cappuccino,Artima Bistro,Carob Mill,Mediterranean bistro,coffee,Cappuccino,https://carobmill-restaurants.com/featured-item/artima-restaurant/menu/,Café Americano €[\d.]+ Cappuccino €{P},same operator as Karatello,2026-11-23,1
+syrian-restaurant:hummus,Syrian Restaurant,Iliados Street,Syrian,starter,Hummus,https://www.syrianrestaurantlimassol.com.cy/menu/,"Hummus Delicious Dip[^€]{0,90}€{P}",site may be out of date,2026-11-23,1
+syrian-restaurant:falafel,Syrian Restaurant,Iliados Street,Syrian,starter,"Falafel, 4 pieces",https://www.syrianrestaurantlimassol.com.cy/menu/,"Falafel \(4 pieces\)[^€]{0,90}€{P}",site may be out of date,2026-11-23,1
+syrian-restaurant:kebab,Syrian Restaurant,Iliados Street,Syrian,main,"Kebab kafta, 3 skewers",https://www.syrianrestaurantlimassol.com.cy/menu/,"Kabab - Kafta \( 3 Skewers \)[^€]{0,90}€{P}",site may be out of date,2026-11-23,1
+syrian-restaurant:mixed-grill,Syrian Restaurant,Iliados Street,Syrian,main,"Mixed grill, per person",https://www.syrianrestaurantlimassol.com.cy/menu/,"Mixed grill per person[^€]{0,60}€{P}",site may be out of date,2026-11-23,1
+syrian-restaurant:full-meze,Syrian Restaurant,Iliados Street,Syrian,meze,"Full meze, per person",https://www.syrianrestaurantlimassol.com.cy/menu/,Full Meze per person \(min\. order for 2\) €{P},site may be out of date,2026-11-23,1
+ocean-basket:fish-chips,Ocean Basket,Limassol branches,Seafood chain,main,Fish and chips,https://cyprus.oceanbasket.com/menu/mains/,"Famous Fish & Chips[^€]{0,60}€{P}",chain-wide price,2026-11-23,1
+ocean-basket:calamari,Ocean Basket,Limassol branches,Seafood chain,main,Calamari,https://cyprus.oceanbasket.com/menu/mains/,"Calamari Heads €[\d.,]+ Calamari €{P}",chain-wide price,2026-11-23,1
+ocean-basket:salmon,Ocean Basket,Limassol branches,Seafood chain,main,Grilled salmon,https://cyprus.oceanbasket.com/menu/mains/,Seasoned Salmon grilled €{P},chain-wide price,2026-11-23,1
+ocean-basket:village-salad,Ocean Basket,Limassol branches,Seafood chain,starter,"Village salad, small",https://cyprus.oceanbasket.com/menu/mains/,"Village Salad Cucumber[^€]{0,90}Small / Large €{P}",chain-wide price,2026-11-23,1
+ocean-basket:espresso,Ocean Basket,Limassol branches,Seafood chain,coffee,Espresso,https://cyprus.oceanbasket.com/menu/drinks/,\bEspresso €{P},chain-wide price,2026-11-23,1
+coffee-island:freddo-espresso,Coffee Island,Omonoias Avenue,Coffee chain,coffee,Freddo espresso,https://www.coffeeisland.com.cy/en/catalog/view/1677-omonoias-limassol,ICED Freddo Espresso {P}€,,2026-11-23,1
+coffee-island:freddo-cappuccino,Coffee Island,Omonoias Avenue,Coffee chain,coffee,Freddo cappuccino,https://www.coffeeisland.com.cy/en/catalog/view/1677-omonoias-limassol,Freddo Cappuccino {P}€,,2026-11-23,1
+coffee-island:cappuccino,Coffee Island,Omonoias Avenue,Coffee chain,coffee,Cappuccino,https://www.coffeeisland.com.cy/en/catalog/view/1677-omonoias-limassol,Americano [\d.]+€ Cappuccino {P}€,,2026-11-23,1
+coffee-island:espresso,Coffee Island,Omonoias Avenue,Coffee chain,coffee,Espresso,https://www.coffeeisland.com.cy/en/catalog/view/1677-omonoias-limassol,HOT Espresso {P}€,,2026-11-23,1
+creamys:ice-cream-scoop,Creamy's,Old town,Gelato and coffee,dessert,"Ice cream, one scoop",https://creamysbar.com/,"1 scoop[^€]{0,60}€{P}",,2026-11-23,1
+creamys:cappuccino,Creamy's,Old town,Gelato and coffee,coffee,Cappuccino,https://creamysbar.com/,Hot Chocolate €[\d.]+ Cappuccino €{P},,2026-11-23,1
+creamys:freddo-espresso,Creamy's,Old town,Gelato and coffee,coffee,Freddo espresso,https://creamysbar.com/,Freddo espresso €{P},,2026-11-23,1
+creamys:cyprus-coffee,Creamy's,Old town,Gelato and coffee,coffee,Cyprus coffee,https://creamysbar.com/,"Cyprus coffee[^€]{0,30}€{P}",,2026-11-23,1
+comfy:freddo-espresso,Comfy,Castle Square,Brunch and coffee,coffee,Freddo espresso,https://comfylimassol.com/pop-up-menu/,Freddo Espresso \| €{P},specialty coffee,2026-11-23,1
+comfy:iced-latte,Comfy,Castle Square,Brunch and coffee,coffee,Iced latte,https://comfylimassol.com/pop-up-menu/,Iced Latte \| €{P},specialty coffee,2026-11-23,1
+sterna:souvlaki-pitta,Sterna,Markou Drakou,Souvlaki house,takeaway,Pork souvlaki in Cypriot pitta,https://sterna-grill.com/,"Pork Souvlaki in Cypriot Pitta[^€]{0,90}€{P}",site ownership not confirmed,2026-11-23,1
+sterna:souvlaki-portion,Sterna,Markou Drakou,Souvlaki house,takeaway,Pork souvlaki portion,https://sterna-grill.com/,"Pork Souvlaki Portion[^€]{0,80}€{P}",site ownership not confirmed,2026-11-23,1
+sterna:sheftalia-pitta,Sterna,Markou Drakou,Souvlaki house,takeaway,Sheftalia in Cypriot pitta,https://sterna-grill.com/,"Sheftalies in Cypriot Pitta[^€]{0,90}€{P}",site ownership not confirmed,2026-11-23,1
+sterna:halloumi-pitta,Sterna,Markou Drakou,Souvlaki house,takeaway,Halloumi in Cypriot pitta,https://sterna-grill.com/,"onion €[\d.]+ Halloumi in Cypriot Pitta[^€]{0,90}€{P}",site ownership not confirmed,2026-11-23,1
+sterna:village-salad,Sterna,Markou Drakou,Souvlaki house,starter,Village salad,https://sterna-grill.com/,Village Salad €{P},site ownership not confirmed,2026-11-23,1

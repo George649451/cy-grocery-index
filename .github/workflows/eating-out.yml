@@ -1,0 +1,41 @@
+name: eating-out
+
+on:
+  schedule:
+    # Menu prices change rarely. One check a week dates a change to within seven days
+    # and asks each restaurant's site for one or two pages.
+    - cron: "45 7 * * 1"   # Monday 09:45 Cyprus
+  workflow_dispatch:
+
+concurrency:
+  group: eating-out
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  eating-out:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.DATA_REPO_TOKEN }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Read menu prices
+        run: python collector/eating_out.py --public-dir data
+      - name: Commit
+        if: always()   # a failed check is still recorded in data/eating_out/runs.csv
+        run: |
+          git config user.name "cy-grocery-index-bot"
+          git config user.email "George649451@users.noreply.github.com"
+          git add data/eating_out
+          git commit -m "eating out $(TZ=Europe/Nicosia date +%F)" || { echo "nothing to commit"; exit 0; }
+          for attempt in 1 2 3 4 5; do
+            git pull --rebase && git push && exit 0
+            echo "push attempt $attempt failed; retrying"; sleep $((attempt * 20))
+          done
+          exit 1

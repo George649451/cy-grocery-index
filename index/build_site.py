@@ -32,6 +32,59 @@ FUEL_ORDER = ["unleaded95", "diesel", "unleaded98", "heating_oil", "kerosene"]
 DISTRICT_ORDER = ["Nicosia", "Limassol", "Larnaca", "Paphos", "Famagusta"]
 
 
+def build_eating_out(public_dir):
+    edir = os.path.join(public_dir, "eating_out")
+    if not (os.path.exists(os.path.join(edir, "items.csv")) and os.path.exists(os.path.join(edir, "prices.csv"))):
+        return None
+    items = [r for r in read(os.path.join(edir, "items.csv")) if r.get("active", "1") != "0"]
+    obs = read(os.path.join(edir, "prices.csv"))
+    if not obs:
+        return None
+    dates = sorted({r["date"] for r in obs})
+    price = {(r["date"], r["item_id"]): fnum(r["price"]) for r in obs}
+    base, latest = dates[0], dates[-1]
+    ids = [it["item_id"] for it in items]
+
+    # Jevons over the items priced on both the base date and the check date. An item missing
+    # on a check is thereby treated as moving with the rest, never as unchanged.
+    series = []
+    for d in dates:
+        rel = [math.log(price[(d, i)] / price[(base, i)]) for i in ids if (d, i) in price and (base, i) in price]
+        series.append({"date": d, "index": round(100 * math.exp(sum(rel) / len(rel)), 2) if rel else None, "items": len(rel)})
+
+    out_items = []
+    for it in items:
+        i = it["item_id"]
+        seen = [d for d in dates if (d, i) in price]
+        if not seen:
+            continue
+        first, last = seen[0], seen[-1]
+        out_items.append({"id": i, "restaurant": it["restaurant"], "area": it["area"], "type": it["type"], "category": it["category"],
+                          "label": it["label"], "url": it["url"], "note": it["note"], "price": price[(last, i)],
+                          "price_start": price[(first, i)], "last_seen": last, "current": last == latest})
+
+    def med(pred):
+        vals = [x["price"] for x in out_items if pred(x)]
+        return {"median": round(statistics.median(vals), 2), "n": len(vals), "min": min(vals), "max": max(vals)} if vals else None
+
+    restaurants = []
+    for name in dict.fromkeys(it["restaurant"] for it in items):
+        its = [x for x in out_items if x["restaurant"] == name]
+        if its:
+            restaurants.append({"name": name, "area": its[0]["area"], "type": its[0]["type"], "url": its[0]["url"],
+                                "note": next((x["note"] for x in its if x["note"] and "operator" not in x["note"] and x["note"] not in ("minimum two", "specialty coffee")), "")})
+    return {
+        "start": base, "latest": latest, "checks": len(dates), "n_items": len(out_items), "n_restaurants": len(restaurants),
+        "series": series, "items": out_items, "restaurants": restaurants,
+        "typical": {
+            "meze": med(lambda x: x["category"] == "meze"),
+            "taverna_main": med(lambda x: x["category"] == "main" and x["type"] == "Cypriot taverna"),
+            "coffee": med(lambda x: x["category"] == "coffee"),
+            "souvlaki_pitta": med(lambda x: x["id"] == "sterna:souvlaki-pitta"),
+        },
+    }
+
+
 # Standard household used for the utilities bills. Stated on the site; change here only.
 STD_KWH_PER_2_MONTHS = 700      # 4,200 kWh a year
 STD_WATER_M3_PER_MONTH = 15     # four people at about 125 litres a day each
@@ -368,11 +421,13 @@ def main() -> int:
 
     fuel = build_fuel(a.public_dir)
     utilities = build_utilities(a.public_dir)
+    eating_out = build_eating_out(a.public_dir)
 
     out = {
         "modules": modules,
         "fuel": fuel,
         "utilities": utilities,
+        "eating_out": eating_out,
         "anomalies": anomalies,
         "generated_from": {"start": start, "latest": latest, "collection_days": len(dates)},
         "basket": {

@@ -58,3 +58,13 @@ A register of published tariffs, checked twice a week by `collector/utilities.py
 **Water.** Domestic tariffs for Limassol (billed every four months) and Larnaca (every three). Standard bill: 15 m³ a month, fixed and maintenance charges included, before 5% VAT; sewerage shown separately. Famagusta (Paralimni) is recorded but no bill is computed because the page does not state the billing period. Paphos publishes no prices and no tariff page was found for Nicosia. The pages carry no effective dates, so a change is dated by when it is first seen.
 
 The standard household (700 kWh per two months, 15 m³ of water a month) is an assumption of this project, set in `index/build_site.py`.
+
+## Module 04: Eating out (23 November 2026)
+
+A fixed list of 45 menu items at nine Limassol restaurants, in `data/eating_out/items.csv`: two Cypriot tavernas, a bistro, a Syrian restaurant, a seafood chain, a souvlaki house and three coffee places. Each row carries the menu URL and a pattern that locates the item and its price in the page's visible text. `collector/eating_out.py` reads them every Monday.
+
+**Sources.** Only menus published on a restaurant's own website. Delivery platforms and review sites are not used: their terms rule them out and their prices include platform mark-ups. About forty Limassol restaurants were checked on 23 November 2026; most traditional places publish no priced menu of their own, which is why the list is short on them. PDF-only menus (Neon Phaliron, Pyxida) and menus hosted by third parties (Dionysus Mansion, Pier One) are left out for now.
+
+**Measure.** The menu price index is the geometric mean of price relatives since the first check, over items priced on both dates, so an item that leaves a menu is treated as moving with the rest. A price that more than doubles or halves between checks is set aside as a parsing slip and listed in `anomalies.csv`. The list is fixed for twelve months. The typical prices shown beside the index (meze per person, taverna main course, a coffee) are medians of the current menu prices and are descriptive only.
+
+**Known weaknesses.** Limassol only. Nine restaurants is a small sample and it is not random: it is the set that publishes prices. Karatello and Artima share an operator. The Syrian Restaurant's site may be out of date. Ownership of the Sterna site was not confirmed. Two chains publish Cyprus-wide prices.

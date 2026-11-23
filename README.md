@@ -2,8 +2,8 @@
 
 An independent tracker of what everyday life costs in Cyprus. The first module,
 **groceries**, collects Alphamega's full online catalogue daily and publishes a
-properly constructed price index monthly. Further modules (fuel, utilities, transport,
-eating out) are declared in `data/modules.csv`; **fuel** is live on the European Commission's Weekly Oil Bulletin (weekly national averages; per-station daily data covers 13 Sep to 29 Oct 2026 only) and follow the same
+properly constructed price index monthly. Further modules (fuel, utilities, eating out,
+transport) are declared in `data/modules.csv`; **fuel** is live on the European Commission's Weekly Oil Bulletin (weekly national averages; per-station daily data covers 13 Sep to 29 Oct 2026 only) and follow the same
 discipline: fixed basket, published method, raw data alongside.
 
 Live site: https://george649451.github.io/cy-grocery-index/

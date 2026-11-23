@@ -82,6 +82,35 @@
     tb.appendChild(tr);
   });
 
+  // ---------------- eating-out module
+  if (d.eating_out) renderEatingOut(d.eating_out);
+  function renderEatingOut(x) {
+    const eur2 = v => v == null ? '—' : '€' + v.toFixed(2);
+    const last = x.series[x.series.length - 1];
+    el('eat-meta').textContent = `${x.n_items} dishes and drinks at ${x.n_restaurants} Limassol restaurants, from a souvlaki house to a steak at the Carob Mill, read from each restaurant's own online menu. First check ${fmtDate(x.start)}; checked weekly. Menu prices move rarely, so expect long flat stretches and occasional steps.`;
+    const t = x.typical, range = m => m && m.n > 1 ? `${m.n} menus, from ${eur2(m.min)} to ${eur2(m.max)}` : (m ? 'one menu' : '');
+    el('eat-stats').innerHTML = [
+      `<div class="stat"><p class="label">Menu price index</p><p class="value">${last.index.toFixed(1)}</p><p class="sub">${fmtShort(x.start)} = 100 · ${last.items} items priced on ${fmtShort(last.date)}</p></div>`,
+      t.meze ? `<div class="stat"><p class="label">Meze, per person</p><p class="value">${eur2(t.meze.median)}</p><p class="sub">median of ${range(t.meze)}</p></div>` : '',
+      t.taverna_main ? `<div class="stat"><p class="label">Taverna main course</p><p class="value">${eur2(t.taverna_main.median)}</p><p class="sub">median of ${t.taverna_main.n} dishes, from ${eur2(t.taverna_main.min)} to ${eur2(t.taverna_main.max)}</p></div>` : '',
+      t.coffee ? `<div class="stat"><p class="label">A coffee</p><p class="value">${eur2(t.coffee.median)}</p><p class="sub">median of ${t.coffee.n} coffees, from ${eur2(t.coffee.min)} to ${eur2(t.coffee.max)}</p></div>` : '',
+    ].join('');
+    el('eat-idx-table').querySelector('tbody').innerHTML = x.series.slice(-12).map((r, i, arr) => {
+      const prev = arr[i - 1]; const ch = prev ? 100 * (r.index / prev.index - 1) : null;
+      const c = ch == null || Math.abs(ch) < 0.05 ? 'flat' : ch > 0 ? 'up' : 'down';
+      return `<tr><td>${fmtDate(r.date)}</td><td class="num">${r.items}</td><td class="num">${r.index.toFixed(1)}</td><td class="num ${c}">${ch == null ? '—' : (ch >= 0 ? '+' : '−') + Math.abs(ch).toFixed(1) + '%'}</td></tr>`;
+    }).reverse().join('');
+    const kinds = { main: 'Main', meze: 'Meze', starter: 'Starter', beer: 'Beer', coffee: 'Coffee', soft: 'Soft drink', dessert: 'Dessert', takeaway: 'Takeaway' };
+    el('eat-table').querySelector('tbody').innerHTML = x.restaurants.map(r => {
+      const head = `<tr class="group"><td colspan="4"><a href="${r.url}" rel="noopener" style="border:0">${esc(r.name)}</a> · ${esc(r.type)} · ${esc(r.area)}${r.note ? ' · ' + esc(r.note) : ''}</td></tr>`;
+      return head + x.items.filter(it => it.restaurant === r.name).map(it => {
+        const ch = 100 * (it.price / it.price_start - 1);
+        const c = Math.abs(ch) < 0.05 ? 'flat' : ch > 0 ? 'up' : 'down';
+        return `<tr><td>${esc(it.label)}${it.current ? '' : ` <span class="chip" title="Last found on the menu on ${it.last_seen}">Not on menu</span>`}</td><td>${kinds[it.category] || esc(it.category)}</td><td class="num">${eur2(it.price)}</td><td class="num ${c}">${Math.abs(ch) < 0.05 ? '·' : (ch > 0 ? '▲ ' : '▼ ') + Math.abs(ch).toFixed(1) + '%'}</td></tr>`;
+      }).join('');
+    }).join('');
+  }
+
   // ---------------- utilities module
   if (d.utilities) renderUtilities(d.utilities);
   function renderUtilities(u) {
