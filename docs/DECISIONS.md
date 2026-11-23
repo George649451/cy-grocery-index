@@ -68,3 +68,9 @@ A fixed list of 45 menu items at nine Limassol restaurants, in `data/eating_out/
 **Measure.** The menu price index is the geometric mean of price relatives since the first check, over items priced on both dates, so an item that leaves a menu is treated as moving with the rest. A price that more than doubles or halves between checks is set aside as a parsing slip and listed in `anomalies.csv`. The list is fixed for twelve months. The typical prices shown beside the index (meze per person, taverna main course, a coffee) are medians of the current menu prices and are descriptive only.
 
 **Known weaknesses.** Limassol only. Nine restaurants is a small sample and it is not random: it is the set that publishes prices. Karatello and Artima share an operator. The Syrian Restaurant's site may be out of date. Ownership of the Sterna site was not confirmed. Two chains publish Cyprus-wide prices.
+
+### Eating out extended to 14 restaurants (23 November 2026, same day)
+
+Five restaurants were added on the start date, taking the list to 82 items: Tsitsis (souvlaki house), High Chaparral and Old Limassol (traditional taverns), Pyxida (fish tavern) and Neon Phaliron (drinks only). The first three address the shortage of traditional places. Pyxida and Neon Phaliron publish PDF menus, which the collector now reads; Pyxida's file name changes with each edition, so the link is rediscovered from its menu page on every check. Tsitsis shows different prices for some items on its homepage and its menu page; the menu page is the one tracked.
+
+The index is now **chained**: each check is linked to the previous one through the items priced on both, so an item added later joins without disturbing the level. All 82 items share the 23 November 2026 base.

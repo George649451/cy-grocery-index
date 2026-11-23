@@ -25,6 +25,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Install PDF reader (two restaurants publish their menu as a PDF)
+        run: pip install --quiet pypdf || echo "pypdf unavailable; PDF menus will be reported as missing"
       - name: Read menu prices
         run: python collector/eating_out.py --public-dir data
       - name: Commit

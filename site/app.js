@@ -100,7 +100,7 @@
       const c = ch == null || Math.abs(ch) < 0.05 ? 'flat' : ch > 0 ? 'up' : 'down';
       return `<tr><td>${fmtDate(r.date)}</td><td class="num">${r.items}</td><td class="num">${r.index.toFixed(1)}</td><td class="num ${c}">${ch == null ? '—' : (ch >= 0 ? '+' : '−') + Math.abs(ch).toFixed(1) + '%'}</td></tr>`;
     }).reverse().join('');
-    const kinds = { main: 'Main', meze: 'Meze', starter: 'Starter', beer: 'Beer', coffee: 'Coffee', soft: 'Soft drink', dessert: 'Dessert', takeaway: 'Takeaway' };
+    const kinds = { main: 'Main', meze: 'Meze', starter: 'Starter', beer: 'Beer', coffee: 'Coffee', soft: 'Soft drink', dessert: 'Dessert', takeaway: 'Takeaway', sharing: 'To share' };
     el('eat-table').querySelector('tbody').innerHTML = x.restaurants.map(r => {
       const head = `<tr class="group"><td colspan="4"><a href="${r.url}" rel="noopener" style="border:0">${esc(r.name)}</a> · ${esc(r.type)} · ${esc(r.area)}${r.note ? ' · ' + esc(r.note) : ''}</td></tr>`;
       return head + x.items.filter(it => it.restaurant === r.name).map(it => {

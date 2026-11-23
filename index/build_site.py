@@ -45,12 +45,19 @@ def build_eating_out(public_dir):
     base, latest = dates[0], dates[-1]
     ids = [it["item_id"] for it in items]
 
-    # Jevons over the items priced on both the base date and the check date. An item missing
-    # on a check is thereby treated as moving with the rest, never as unchanged.
+    # Chained Jevons: each check is linked to the one before it through the items priced on
+    # both. An item missing on a check therefore moves with the rest, never as unchanged, and
+    # an item added to the list later joins from its first check without disturbing the level.
     series = []
-    for d in dates:
-        rel = [math.log(price[(d, i)] / price[(base, i)]) for i in ids if (d, i) in price and (base, i) in price]
-        series.append({"date": d, "index": round(100 * math.exp(sum(rel) / len(rel)), 2) if rel else None, "items": len(rel)})
+    level = 100.0
+    for k, d in enumerate(dates):
+        n = sum(1 for i in ids if (d, i) in price)
+        if k:
+            prev = dates[k - 1]
+            rel = [math.log(price[(d, i)] / price[(prev, i)]) for i in ids if (d, i) in price and (prev, i) in price]
+            if rel:
+                level *= math.exp(sum(rel) / len(rel))
+        series.append({"date": d, "index": round(level, 2), "items": n})
 
     out_items = []
     for it in items:
@@ -78,9 +85,10 @@ def build_eating_out(public_dir):
         "series": series, "items": out_items, "restaurants": restaurants,
         "typical": {
             "meze": med(lambda x: x["category"] == "meze"),
-            "taverna_main": med(lambda x: x["category"] == "main" and x["type"] == "Cypriot taverna"),
+            "taverna_main": med(lambda x: x["category"] == "main" and "Cypriot" in x["type"]),
             "coffee": med(lambda x: x["category"] == "coffee"),
-            "souvlaki_pitta": med(lambda x: x["id"] == "sterna:souvlaki-pitta"),
+            "souvlaki_pitta": med(lambda x: x["id"].endswith(":souvlaki-pitta")),
+            "beer_33cl": med(lambda x: x["id"].endswith(":beer-33cl")),
         },
     }
 

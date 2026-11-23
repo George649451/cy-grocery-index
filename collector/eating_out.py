@@ -14,7 +14,10 @@ Outputs under <public-dir>/eating_out/
   anomalies.csv   observations set aside (a price that more than doubles or halves)
   runs.csv        one row per check: items found, missing, pages that failed
 
-Standard library only.
+A menu may also be a PDF. Give its address directly in `url`, or, when the file name
+changes with each edition, give the page that links to it in `url` and a pattern for
+the link in `doc_link`. PDF text needs the optional pypdf package; without it those
+items are reported as missing and everything else still runs.
 """
 from __future__ import annotations
 
@@ -26,6 +29,7 @@ import os
 import re
 import sys
 import time
+from urllib.parse import quote, urljoin
 from urllib.request import Request, urlopen
 
 USER_AGENT = "Mozilla/5.0 (compatible; cy-price-index-bot/0.1; +https://github.com/George649451/cy-grocery-index)"
@@ -35,16 +39,41 @@ ANOMALY_FIELDS = ["date", "item_id", "price_listed", "previous_price"]
 RUN_FIELDS = ["date", "items", "found", "missing", "pages_failed", "changed", "ok", "detail"]
 
 
-def fetch(url: str, retries: int = 3) -> str:
+def fetch(url: str, retries: int = 3) -> bytes:
     last = None
     for attempt in range(retries):
         try:
-            with urlopen(Request(url, headers={"User-Agent": USER_AGENT}), timeout=90) as r:
-                return r.read().decode("utf-8", "replace")
+            with urlopen(Request(quote(url, safe=":/?&=%#+,;@()!*'~$-._"), headers={"User-Agent": USER_AGENT}), timeout=120) as r:
+                return r.read()
         except Exception as e:  # noqa: BLE001
             last = e
             time.sleep(5 * (attempt + 1))
     raise RuntimeError(f"{url}: {last}")
+
+
+def pdf_text(blob: bytes) -> str:
+    try:
+        import pypdf  # type: ignore
+    except ImportError as e:
+        raise RuntimeError("PDF menu but pypdf is not installed") from e
+    import io
+    import logging
+    logging.getLogger("pypdf").setLevel(logging.ERROR)
+    reader = pypdf.PdfReader(io.BytesIO(blob))
+    return re.sub(r"\s+", " ", " ".join((p.extract_text() or "") for p in reader.pages)).strip()
+
+
+def menu_text(url: str, doc_link: str = "") -> str:
+    """Visible text of a menu: an HTML page, a PDF, or a PDF linked from a page."""
+    blob = fetch(url)
+    if doc_link:
+        m = re.search(doc_link, blob.decode("utf-8", "replace"))
+        if not m:
+            raise RuntimeError(f"{url}: no link matching {doc_link!r}")
+        blob = fetch(urljoin(url, html.unescape(m.group(1))))
+    if blob[:5] == b"%PDF-":
+        return pdf_text(blob)
+    return visible_text(blob.decode("utf-8", "replace"))
 
 
 def visible_text(page: str) -> str:
@@ -89,11 +118,11 @@ def run(public_dir: str, date: str, dry_run: bool) -> int:
         return 2
 
     pages, failed = {}, []
-    for url in sorted({r["url"] for r in items}):
+    for key in sorted({(r["url"], r.get("doc_link", "") or "") for r in items}):
         try:
-            pages[url] = visible_text(fetch(url))
+            pages[key] = menu_text(*key)
         except Exception as e:  # noqa: BLE001
-            failed.append(url)
+            failed.append(key[0])
             print(f"[{date}] page failed: {e}", file=sys.stderr, flush=True)
         time.sleep(1)
 
@@ -106,7 +135,7 @@ def run(public_dir: str, date: str, dry_run: bool) -> int:
 
     found, missing, anomalies, changed = [], [], [], 0
     for it in items:
-        text = pages.get(it["url"])
+        text = pages.get((it["url"], it.get("doc_link", "") or ""))
         price = find_price(text, it["pattern"]) if text else None
         if price is None:
             missing.append(it["item_id"])
