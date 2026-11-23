@@ -48,3 +48,13 @@ Module 02 now runs on the European Commission's **Weekly Oil Bulletin**: the con
 What is lost: daily frequency, districts, brands and the station-level spread. What is gained: 21 years of history and year-on-year comparisons from day one. On the seven Mondays where both exist, the Commission's unleaded 95 figure and the mean of our own station prices differ by 0.2 cent on average, so the weekly series is a faithful continuation of the same underlying data. The station data for 13 September to 29 October 2026 stays published as a dated snapshot.
 
 Route back to station-level data: data.gov.cy lists a "Retail Fuel Price Observatory (API)" dataset offering an XML feed on application to the Consumer Protection Service, on condition that the applicant offers consumers a free version of the observatory. The listing predates the October 2026 migration and has not been verified as still operating. Applying is the owner's decision.
+
+## Module 03: Utilities (23 November 2026)
+
+A register of published tariffs, checked twice a week by `collector/utilities.py`, with every change logged in `data/utilities/changes.csv`.
+
+**Electricity.** EAC domestic single-rate tariff, Code 01. Price per kWh = energy charge + network charge + ancillary services charge + the *revised* fuel adjustment EAC publishes each month for low-voltage, bi-monthly consumers, which is the figure EAC says it bills. The series starts in May 2026, when the current tariff and its €600 per tonne base fuel price took effect; earlier 2026 months were adjusted from a €300 base under a tariff this project never recorded, so they are stored but not turned into a price. Standard bill: 700 kWh per two months plus the meter and supply charges. Excluded: VAT, the public service obligation charge and the renewables levy.
+
+**Water.** Domestic tariffs for Limassol (billed every four months) and Larnaca (every three). Standard bill: 15 m³ a month, fixed and maintenance charges included, before 5% VAT; sewerage shown separately. Famagusta (Paralimni) is recorded but no bill is computed because the page does not state the billing period. Paphos publishes no prices and no tariff page was found for Nicosia. The pages carry no effective dates, so a change is dated by when it is first seen.
+
+The standard household (700 kWh per two months, 15 m³ of water a month) is an assumption of this project, set in `index/build_site.py`.

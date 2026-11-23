@@ -160,3 +160,9 @@ footer { display: flex; justify-content: space-between; gap: 24px; flex-wrap: wr
 .legend span::before { content: ""; display: inline-block; width: 14px; height: 2px; background: var(--series-1); margin-right: 8px; vertical-align: middle; }
 .legend span.s2::before { background: var(--series-2); }
 .delta { font-size: 13px; color: var(--ink-3); }
+
+/* utilities */
+.note-inline { color: var(--ink-2); font-size: 14px; line-height: 1.45; }
+#util-w-table td { vertical-align: top; }
+#util-w-table a.t { font-weight: 500; border: 0; }
+#util-el-table td:first-child { white-space: nowrap; }

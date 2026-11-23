@@ -32,6 +32,85 @@ FUEL_ORDER = ["unleaded95", "diesel", "unleaded98", "heating_oil", "kerosene"]
 DISTRICT_ORDER = ["Nicosia", "Limassol", "Larnaca", "Paphos", "Famagusta"]
 
 
+# Standard household used for the utilities bills. Stated on the site; change here only.
+STD_KWH_PER_2_MONTHS = 700      # 4,200 kWh a year
+STD_WATER_M3_PER_MONTH = 15     # four people at about 125 litres a day each
+
+
+def water_bill(rows, m3_per_month):
+    """Monthly water charge before VAT for a district's tariff rows, plus sewerage."""
+    period = next((int(r["period_months"]) for r in rows if r["period_months"]), None)
+    if not period:
+        return None
+    q = m3_per_month * period
+    fixed = sum(fnum(r["value_eur"]) for r in rows if r["component"] in ("fixed", "maintenance"))
+    usage = 0.0
+    for r in rows:
+        if r["component"] != "band":
+            continue
+        lo = fnum(r["from_m3"]) or 1
+        hi = fnum(r["to_m3"]) if r["to_m3"] else float("inf")
+        usage += max(0.0, min(q, hi) - (lo - 1)) * fnum(r["value_eur"])
+    sew = next((fnum(r["value_eur"]) for r in rows if r["component"] == "sewerage_per_m3"), None)
+    return {"period_months": period, "m3_per_period": q, "fixed_per_period": round(fixed, 2),
+            "usage_per_period": round(usage, 2), "monthly": round((fixed + usage) / period, 2),
+            "sewerage_per_m3": sew, "sewerage_monthly": round(sew * m3_per_month, 2) if sew is not None else None}
+
+
+def build_utilities(public_dir):
+    udir = os.path.join(public_dir, "utilities")
+    if not os.path.exists(os.path.join(udir, "eac_tariff.csv")):
+        return None
+    tariffs = read(os.path.join(udir, "eac_tariff.csv"))
+    fuel = read(os.path.join(udir, "eac_fuel_adjustment.csv")) if os.path.exists(os.path.join(udir, "eac_fuel_adjustment.csv")) else []
+    water = read(os.path.join(udir, "water_tariffs.csv")) if os.path.exists(os.path.join(udir, "water_tariffs.csv")) else []
+    changes = read(os.path.join(udir, "changes.csv")) if os.path.exists(os.path.join(udir, "changes.csv")) else []
+    runs = read(os.path.join(udir, "runs.csv")) if os.path.exists(os.path.join(udir, "runs.csv")) else []
+
+    electricity = None
+    if tariffs:
+        t = tariffs[-1]
+        base_units = fnum(t["energy_cent_kwh"]) + fnum(t["network_cent_kwh"]) + (fnum(t["ancillary_cent_kwh"]) or 0.0)
+        fixed = fnum(t["meter_eur_bimonthly"]) + fnum(t["supply_eur_bimonthly"])
+        start_month = (t["effective_from"] or t["first_seen"])[:7]
+        months = []
+        for r in sorted(fuel, key=lambda x: x["bill_month"]):
+            # only months billed under this tariff: on or after its start, and adjusted from the same base fuel price
+            same_base = not t["base_fuel_eur_mt"] or abs(fnum(r["implied_base_eur_mt"]) - fnum(t["base_fuel_eur_mt"])) < 1
+            if r["bill_month"] < start_month or not same_base:
+                continue
+            unit = base_units + fnum(r["revised_cent_kwh"])
+            bill = STD_KWH_PER_2_MONTHS * unit / 100 + fixed
+            months.append({"month": r["bill_month"], "fuel_price_eur_mt": fnum(r["fuel_price_eur_mt"]),
+                           "fuel_adjustment_cent": fnum(r["revised_cent_kwh"]), "unit_cent_kwh": round(unit, 4),
+                           "bill_2_months": round(bill, 2), "bill_monthly": round(bill / 2, 2)})
+        electricity = {
+            "tariff": {"code": t["code"], "effective_from": t["effective_from"], "energy_cent_kwh": fnum(t["energy_cent_kwh"]),
+                       "network_cent_kwh": fnum(t["network_cent_kwh"]), "ancillary_cent_kwh": fnum(t["ancillary_cent_kwh"]) or 0.0,
+                       "fixed_eur_2_months": round(fixed, 2), "base_fuel_eur_mt": fnum(t["base_fuel_eur_mt"]), "source_doc": t["source_doc"]},
+            "kwh_per_2_months": STD_KWH_PER_2_MONTHS, "months": months,
+        }
+
+    districts = []
+    for name in sorted({r["district"] for r in water}):
+        rows = [r for r in water if r["district"] == name]
+        bands = [{"from": fnum(r["from_m3"]), "to": fnum(r["to_m3"]) if r["to_m3"] else None, "rate": fnum(r["value_eur"])}
+                 for r in rows if r["component"] == "band"]
+        flat = next((r for r in rows if r["component"] == "flat_including_first_band"), None)
+        districts.append({
+            "district": name, "area": rows[0]["area"], "source_url": rows[0]["source_url"], "last_checked": rows[0]["last_checked"],
+            "fixed": next((fnum(r["value_eur"]) for r in rows if r["component"] == "fixed"), None),
+            "maintenance": next((fnum(r["value_eur"]) for r in rows if r["component"] == "maintenance"), None),
+            "flat": {"to": fnum(flat["to_m3"]), "value": fnum(flat["value_eur"])} if flat else None,
+            "bands": sorted(bands, key=lambda b: b["from"]),
+            "bill": water_bill(rows, STD_WATER_M3_PER_MONTH),
+        })
+    ok_runs = [r for r in runs if r["ok"] == "1"]
+    return {"electricity": electricity, "water": districts, "m3_per_month": STD_WATER_M3_PER_MONTH,
+            "changes": changes[-20:], "last_checked": max((r["date"] for r in ok_runs), default=None),
+            "failed_sources": sorted({r["source"] for r in runs if r["ok"] == "0" and r["date"] == max(x["date"] for x in runs)}) if runs else []}
+
+
 EC_FUELS = ["unleaded95", "diesel", "heating_oil"]
 
 
@@ -288,10 +367,12 @@ def main() -> int:
     promo_depth = round(100 * (1 - sum(it["pack_price"] for it in with_orig) / sum(it["original_price"] for it in with_orig)), 1) if with_orig else None
 
     fuel = build_fuel(a.public_dir)
+    utilities = build_utilities(a.public_dir)
 
     out = {
         "modules": modules,
         "fuel": fuel,
+        "utilities": utilities,
         "anomalies": anomalies,
         "generated_from": {"start": start, "latest": latest, "collection_days": len(dates)},
         "basket": {

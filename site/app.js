@@ -82,6 +82,44 @@
     tb.appendChild(tr);
   });
 
+  // ---------------- utilities module
+  if (d.utilities) renderUtilities(d.utilities);
+  function renderUtilities(u) {
+    const e = u.electricity, eur2 = v => v == null ? '—' : '€' + v.toFixed(2);
+    const pctf = (a, b) => (a == null || b == null) ? null : 100 * (a / b - 1);
+    const sg = v => v == null ? '—' : (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(1) + '%';
+    const cl = v => v == null || Math.abs(v) < 0.05 ? 'flat' : v > 0 ? 'up' : 'down';
+    el('util-meta').textContent = `Published tariffs for electricity and water, checked twice a week and logged whenever they change. Last checked ${u.last_checked ? fmtDate(u.last_checked) : '—'}. Bills are for a standard household: ${e ? e.kwh_per_2_months : 700} kWh of electricity every two months and ${u.m3_per_month} m³ of water a month.`;
+    const tiles = [];
+    if (e && e.months.length) {
+      const m = e.months[e.months.length - 1], first = e.months[0], prev = e.months[e.months.length - 2];
+      const since = pctf(m.unit_cent_kwh, first.unit_cent_kwh), mom = pctf(m.unit_cent_kwh, prev && prev.unit_cent_kwh);
+      tiles.push(`<div class="stat"><p class="label">Electricity · ${fmtMonth(m.month)}</p><p class="value">${m.unit_cent_kwh.toFixed(2)}<span class="delta"> cent/kWh</span></p><p class="sub"><span class="${cl(mom)}">${sg(mom)}</span> on the month before · <span class="${cl(since)}">${sg(since)}</span> since ${fmtMonth(first.month)}</p></div>`);
+      tiles.push(`<div class="stat"><p class="label">Electricity · standard bill</p><p class="value">${eur2(m.bill_monthly)}<span class="delta"> /month</span></p><p class="sub">${eur2(m.bill_2_months)} per two-month bill for ${e.kwh_per_2_months} kWh, before VAT</p></div>`);
+      el('util-el-p').textContent = `Domestic single-rate tariff (Code ${e.tariff.code}) from the Electricity Authority of Cyprus, in force since ${e.tariff.effective_from ? fmtDate(e.tariff.effective_from) : 'the date first recorded'}: ${e.tariff.energy_cent_kwh.toFixed(2)} cent energy and ${e.tariff.network_cent_kwh.toFixed(2)} cent network per kWh, plus the fuel adjustment EAC publishes each month. Before VAT and levies.`;
+      drawMulti(el('util-el-chart'), [{ key: 'unit', label: 'Price per kWh, €', cls: 's1', pts: e.months.map(x => ({ date: x.month + '-01', v: x.unit_cent_kwh / 100 })) }], 'Electricity price per kWh by billing month');
+      el('util-el-table').querySelector('tbody').innerHTML = e.months.map((x, i, arr) => {
+        const ch = i ? pctf(x.unit_cent_kwh, arr[i - 1].unit_cent_kwh) : null;
+        return `<tr><td>${fmtMonth(x.month)}</td><td class="num">${x.fuel_price_eur_mt.toFixed(2)}</td><td class="num">${x.fuel_adjustment_cent.toFixed(2)}</td><td class="num">${x.unit_cent_kwh.toFixed(2)}</td><td class="num ${cl(ch)}">${sg(ch)}</td><td class="num">${eur2(x.bill_monthly)}</td></tr>`;
+      }).reverse().join('');
+    }
+    const withBill = u.water.filter(w => w.bill);
+    withBill.forEach(w => tiles.push(`<div class="stat"><p class="label">Water · ${esc(w.district)}</p><p class="value">${eur2(w.bill.monthly)}<span class="delta"> /month</span></p><p class="sub">${u.m3_per_month} m³ a month, before VAT${w.bill.sewerage_monthly != null ? ` · plus ${eur2(w.bill.sewerage_monthly)} sewerage` : ''}</p></div>`));
+    el('util-stats').innerHTML = tiles.join('');
+    el('util-w-p').textContent = `Domestic tariffs as published by each district organisation. The standard bill is ${u.m3_per_month} m³ a month, fixed charges included, before 5% VAT; sewerage is charged on top. None of these pages states an effective date, so a change is dated by when it is first seen.`;
+    const bandTxt = w => (w.flat ? [`first ${w.flat.to} m³ included in the flat charge`] : []).concat(w.bands.reduce((acc, b) => {
+      const last = acc[acc.length - 1];
+      if (last && last.rate === b.rate) last.to = b.to; else acc.push({ from: b.from, to: b.to, rate: b.rate });
+      return acc; }, []).map(b => `${b.to == null ? 'over ' + (b.from - 1) : b.from + '–' + b.to} m³: €${b.rate.toFixed(2)}`)).join(' · ');
+    el('util-w-table').querySelector('tbody').innerHTML = u.water.slice().sort((a, b) => (b.bill ? 1 : 0) - (a.bill ? 1 : 0)).map(w => `<tr>
+      <td><a class="t" href="${w.source_url}" rel="noopener">${esc(w.district)}${w.area ? ' · ' + esc(w.area) : ''}</a></td>
+      <td>${w.bill ? 'every ' + w.bill.period_months + ' months' : 'period not stated'}</td>
+      <td class="num">${w.flat ? eur2(w.flat.value) : eur2((w.fixed || 0) + (w.maintenance || 0))}</td>
+      <td><span class="note-inline">${bandTxt(w)}</span></td>
+      <td class="num">${w.bill && w.bill.sewerage_per_m3 != null ? eur2(w.bill.sewerage_per_m3) : '—'}</td>
+      <td class="num">${w.bill ? eur2(w.bill.monthly) : '<span class="flat">not computed</span>'}</td></tr>`).join('');
+  }
+
   // ---------------- fuel module
   if (d.fuel) renderFuel(d.fuel);
   function renderFuel(f) {
@@ -122,7 +160,7 @@
     el('fuel-brands').querySelector('tbody').innerHTML = f.brands.map(b => `<tr><td>${esc(b.brand)}</td><td class="num">${b.n}</td><td class="num">${eurL(b.unleaded95)}</td><td class="num ${fc(b.unleaded95 - n95)}">${dv(b.unleaded95, n95)}</td><td class="num">${eurL(b.diesel)}</td><td class="num ${fc(b.diesel == null ? null : b.diesel - nd)}">${dv(b.diesel, nd)}</td></tr>`).join('');
   }
 
-  function drawMulti(host, seriesList) {
+  function drawMulti(host, seriesList, aria) {
     const W = 1000, H = 340, m = { t: 24, r: 110, b: 36, l: 56 };
     const all = seriesList.flatMap(s => s.pts);
     const xs = all.map(p => new Date(p.date + 'T00:00:00').getTime());
@@ -135,7 +173,7 @@
     const Y = v => m.t + (1 - (v - ymin) / (ymax - ymin)) * (H - m.t - m.b);
     const step = (ymax - ymin) / 4;
     const yt = []; for (let v = ymin; v <= ymax + 1e-9; v += step) yt.push(v);
-    let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="National median fuel price per litre over time">`;
+    let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${aria || 'National average fuel price per litre over time'}">`;
     svg += yt.map(v => `<line class="grid" x1="${m.l}" x2="${W - m.r}" y1="${Y(v)}" y2="${Y(v)}"/><text class="axis" x="${m.l - 8}" y="${Y(v) + 4}" text-anchor="end">€${v.toFixed(2)}</text>`).join('');
     const mt = []; const d0 = new Date(x0); d0.setDate(1); for (let dd = new Date(d0); dd.getTime() <= x1; dd.setMonth(dd.getMonth() + 1)) if (dd.getTime() >= x0 + 3 * 864e5) mt.push(dd.getTime());
     svg += mt.map(t => `<text class="axis" x="${X(t)}" y="${H - 12}" text-anchor="middle">${new Date(t).toLocaleDateString('en-GB', { month: 'short', year: '2-digit' })}</text>`).join('');

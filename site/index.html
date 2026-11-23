@@ -16,7 +16,7 @@
   <nav class="topbar">
     <span class="brand">Cyprus Price Index</span>
     <span class="topbar-mid">Independent · Collected daily · Published monthly</span>
-    <span class="topbar-links" id="topnav"><a href="#groceries">Groceries</a><a href="#fuel">Fuel</a><a href="#coming">Coming</a><a href="#data">Data</a><a href="https://github.com/George649451/cy-grocery-index">GitHub</a></span>
+    <span class="topbar-links" id="topnav"><a href="#groceries">Groceries</a><a href="#fuel">Fuel</a><a href="#utilities">Utilities</a><a href="#coming">Coming</a><a href="#data">Data</a><a href="https://github.com/George649451/cy-grocery-index">GitHub</a></span>
   </nav>
 
   <header class="masthead">
@@ -127,8 +127,42 @@
     </div>
   </section>
 
+  <section class="module-head" id="utilities">
+    <span class="n">Module 03</span>
+    <h2>Utilities</h2>
+    <p class="module-meta" id="util-meta">—</p>
+  </section>
+
+  <section class="stats stats-fuel" id="util-stats" aria-label="Utilities key figures"></section>
+
+  <section class="sec" aria-labelledby="util-el-h">
+    <div class="sec-label"><span class="n">03.1</span><h2 id="util-el-h">Electricity price per kWh</h2><p id="util-el-p">—</p></div>
+    <div class="sec-body">
+      <figure class="chart" id="util-el-chart"></figure>
+      <div class="table-scroll">
+      <table id="util-el-table" class="compact">
+        <caption>Monthly readings · domestic tariff, before VAT</caption>
+        <thead><tr><th>Month</th><th class="num">Fuel €/tonne</th><th class="num">Fuel adj. c/kWh</th><th class="num">Price c/kWh</th><th class="num">vs prev.</th><th class="num">Bill /month</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" aria-labelledby="util-w-h">
+    <div class="sec-label"><span class="n">03.2</span><h2 id="util-w-h">Water</h2><p id="util-w-p">—</p></div>
+    <div class="sec-body">
+      <div class="table-scroll">
+      <table id="util-w-table">
+        <thead><tr><th>District</th><th>Billed</th><th class="num">Fixed charges</th><th>Price per m³ by band</th><th class="num">Sewerage per m³</th><th class="num">Standard bill per month</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      </div>
+    </div>
+  </section>
+
   <section class="module-head" id="coming">
-    <span class="n">Modules 03–05</span>
+    <span class="n">Modules 04–05</span>
     <h2>Coming next</h2>
     <p class="module-meta">Each module gets the same treatment: a fixed basket, a published method, raw data alongside. Nothing is shown until it has been collected for long enough to mean something.</p>
   </section>
@@ -157,6 +191,10 @@
       <h2>Data</h2>
       <p>Collected once a day from Alphamega's public online catalogue. Branch differences are stock, not price. Everything on this page is reproducible from the published files.</p>
       <ul class="links">
+        <li><a href="data/utilities/eac_fuel_adjustment.csv">Electricity fuel adjustment</a><span>by billing month</span></li>
+        <li><a href="data/utilities/eac_tariff.csv">Electricity tariff versions</a></li>
+        <li><a href="data/utilities/water_tariffs.csv">Water tariffs</a><span>Limassol, Larnaca, Paralimni</span></li>
+        <li><a href="data/utilities/changes.csv">Utilities change log</a></li>
         <li><a href="data/fuel/ec_weekly.csv">Fuel weekly national averages</a><span>2005 to date</span></li>
         <li><a href="data/fuel/daily.csv">Fuel station aggregates</a><span>13 Sep to 29 Oct 2026</span></li>
         <li><a href="data/fuel/latest.csv">Fuel station prices</a><span>every station, 29 Oct 2026</span></li>
