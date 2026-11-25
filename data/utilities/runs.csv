@@ -14,3 +14,8 @@ date,source,ok,detail
 2026-11-23,water_limassol,1,"7 components, 0 changed"
 2026-11-23,water_larnaca,1,"10 components, 0 changed"
 2026-11-23,water_famagusta,1,"6 components, 0 changed"
+2026-11-25,eac_tariff,1,unchanged: energy 17.89 + network 3.93 cent/kWh
+2026-11-25,eac_fuel_adjustment,1,"11 months on page, 0 new; latest 2026-11: fuel €991.36/MT, revised adjustment 9.7312 cent/kWh"
+2026-11-25,water_limassol,1,"7 components, 0 changed"
+2026-11-25,water_larnaca,1,"10 components, 0 changed"
+2026-11-25,water_famagusta,1,"6 components, 0 changed"
